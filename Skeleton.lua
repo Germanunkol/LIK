@@ -18,7 +18,6 @@ function Skeleton:getDebugData()
 	for b,t in pairs(self.bones) do
 		pS = b:getPos()
 		pE = b:getEndPos()
-		print(pE)
 		len = cpml.vec3.len( pS - pE )
 		--r = b:getRot()
 		--tmp = cpml.vec3( 1,0,0 )
