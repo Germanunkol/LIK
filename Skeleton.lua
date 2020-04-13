@@ -26,7 +26,7 @@ function Skeleton:getDebugData()
 		pO1 = b:toGlobal( cpml.vec3( len*0.05, -len*w, 0 ) )
 
 		-- Insert a triangle:
-		d = { col={0.5,0.5,0.5},
+		d = { col={0.25,0.25,0.5, 0.9},
 			drawType="tri",
 			p0=pS,
 			p1=pO0,
@@ -35,7 +35,7 @@ function Skeleton:getDebugData()
 		}
 		table.insert( data, d )
 
-		d = { col={0.75,0.5,0.5},
+		d = { col={0.9,0.9,0.9, 0.9},
 			drawType="line",
 			p0=pS,
 			p1=pE

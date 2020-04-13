@@ -38,8 +38,9 @@ end
 
 function love.update( dt )
 	t = love.timer.getTime()
-	q = cpml.quat.from_angle_axis( t, cpml.vec3(0,0,1) )
-	print(t,q)
-	b1:setLocalRot( q )
-	b2:setLocalRot( q )
+	q1 = cpml.quat.from_angle_axis( t, cpml.vec3(0,0,1) )
+	b1:setLocalRot( q1 )
+
+	q2 = cpml.quat.from_angle_axis( t*5, cpml.vec3(0,0,1) )
+	b2:setLocalRot( q2 )
 end
