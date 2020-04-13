@@ -1,0 +1,6 @@
+[submodule "lib/middleclass"]
+	path = lib/middleclass
+	url = git@github.com:kikito/middleclass.git
+[submodule "lib/cpml"]
+	path = lib/cpml
+	url = git@github.com:excessive/cpml.git
