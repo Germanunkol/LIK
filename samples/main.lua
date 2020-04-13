@@ -10,7 +10,7 @@ local cpml = require("lib.cpml")
 function love.load()
 	print("Sample started")
 	skel = Skeleton:new()
-	b1 = Bone:new( skel, nil, cpml.quat() )
+	b1 = Bone:new( skel, nil, cpml.quat(), 1 )
 end
 
 function love.draw()
@@ -35,3 +35,9 @@ function love.draw()
 	love.graphics.pop()
 end
 
+function love.update( dt )
+	t = love.timer.getTime()
+	q = cpml.quat.from_angle_axis( t, cpml.vec3(0,0,1) )
+	print(t,q)
+	b1:setRot( q )
+end

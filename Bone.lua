@@ -6,20 +6,24 @@ local Bone = class("Bone")
 function Bone:initialize( skeleton, parent, baseRot, length )
 	self.skeleton = skeleton
 	self.parent = parent or nil
-	self.basePos = basePos or cpml.vec3(0,0,0)
-	self.baseRot = baseRot or cpml.quat(0,0,0,1)
-	self.len = len or 0
+	self.pos = basePos or cpml.vec3(0,0,0)
+	self:setRot( baseRot or cpml.quat(0,0,0,1) )
+	self.len = length or 0
 	self.skeleton:addBone( self )
 end
 
 function Bone:getPos()
-	return cpml.vec3( 0,0,0 )
+	return self.pos
 end
 function Bone:getEndPos()
-	return cpml.vec3( 1,0,0 )
+	print( cpml.vec3( self.len,0,0 ) )
+	return self:toGlobal( cpml.vec3( self.len,0,0 ) )
+end
+function Bone:setRot( r )
+	self.rot = r
 end
 function Bone:getRot()
-	return cpml.quat( 0,0,0,1 )
+	return self.rot
 end
 function Bone:toGlobal( vec )
 	p = self:getPos()
