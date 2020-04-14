@@ -1,5 +1,6 @@
 local class = require("lib/middleclass/middleclass")
 local cpml = require("lib.cpml")
+local util = require("util")
 
 local Bone = class("Bone")
 
@@ -14,16 +15,6 @@ end
 
 function Bone:setLocalPos( p )
 	self.lPos = p
-end
-
-function angleRange( v )
-	while v < -math.pi do
-		v = v + math.pi*2
-	end
-	while v > math.pi do
-		v = v - math.pi*2
-	end
-	return v
 end
 
 function Bone:setLocalRot( r )
@@ -75,16 +66,6 @@ function Bone:toGlobal( vec )
 	r = self:getRot()
 	rotated = cpml.quat.mul_vec3( r, vec )
 	return p + rotated
-end
-
-function swingTwistDecomposition( rotation, direction )
-	--local rAngle, rAxis = cpml.quat.to_angle_axis( rotation )
-	local rAxis = cpml.vec3( rotation.x, rotation.y, rotation.z )
-	local proj = direction*cpml.vec3.dot( rAxis, direction )
-	local twist = cpml.quat( proj.x, proj.y, proj.z, rotation.w )
-	local twist = cpml.quat.normalize( twist )
-	local swing = rotation * cpml.quat.conjugate( twist )
-	return swing, twist
 end
 
 function Bone:setConstraint( axis, minAng, maxAng )
