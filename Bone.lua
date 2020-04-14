@@ -88,6 +88,12 @@ function swingTwistDecomposition( rotation, direction )
 end
 
 function Bone:setConstraint( axis, minAng, maxAng )
+	assert( minAng <= maxAng,
+		"Can't set constraint: Minimum angle must be smaller than maximum angle")
+	assert( minAng >= -math.pi,
+		"Can't set constraint: Minimum angle must be greater than -pi")
+	assert( maxAng <= math.pi,
+		"Can't set constraint: Maximum angle must be smaller than pi")
 	self.constraint = {
 		axis=cpml.vec3.normalize(axis),
 		minAng=minAng,
