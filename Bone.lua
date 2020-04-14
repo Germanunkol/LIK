@@ -103,7 +103,6 @@ end
 
 function Bone:getDebugData()
 	local data = {}
-	print("data")
 
 	local pS = self:getPos()
 	local pE = self:getEndPos()
@@ -123,7 +122,6 @@ function Bone:getDebugData()
 		p3=pO1,
 	}
 	table.insert( data, d )
-	print(d, #data)
 
 	-- Insert a line:
 	local d = { col={0.9,0.9,0.9, 0.9},
@@ -132,7 +130,6 @@ function Bone:getDebugData()
 		p1=pE
 	}
 	table.insert( data, d )
-	print(d, #data)
 
 	-- Draw constraint, if any:
 	if self.constraint then
@@ -140,7 +137,6 @@ function Bone:getDebugData()
 				self.constraint.axis )
 		local maxRot = cpml.quat.from_angle_axis( self.constraint.maxAng,
 				self.constraint.axis )
-		print(minRot, maxRot)
 
 		-- My end pos in local coordinates...
 		local lEndPos = cpml.vec3( self.len,0,0 )

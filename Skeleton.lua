@@ -18,8 +18,6 @@ function Skeleton:getDebugData()
 	for b,t in pairs(self.bones) do
 		local boneData = b:getDebugData()
 		for key, val in pairs(boneData) do
-			print(key, val)
-			--print(i,d)
 			table.insert( data, val )
 		end
 	end
