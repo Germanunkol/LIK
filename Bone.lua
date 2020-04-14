@@ -15,22 +15,34 @@ end
 function Bone:setLocalPos( p )
 	self.lPos = p
 end
+
+function angleRange( v )
+	while v < -math.pi do
+		v = v + math.pi*2
+	end
+	while v > math.pi do
+		v = v - math.pi*2
+	end
+	return v
+end
+
 function Bone:setLocalRot( r )
 	if self.constraint ~= nil then
+		origAngle, origAxis = cpml.quat.to_angle_axis( r )
 		-- Find component which rotates around the self constraint axis (twist)
 		swing, twist = swingTwistDecomposition( r, self.constraint.axis )
 		-- This is the new rotation:	
 		r = twist
 		-- Clamp this new rotation:
-		rAngle, rAxis = cpml.quat.to_angle_axis( twist )
+		tAngle, tAxis = cpml.quat.to_angle_axis( twist )
 		-- Ensure that the rotation axis was not flipped:
-		if cpml.vec3.dist2( rAxis, self.constraint.axis ) > 0.5 then
-			rAxis = -rAxis
-			rAngle = -rAngle
+		if cpml.vec3.dist2( tAxis, self.constraint.axis ) > 0.5 then
+			tAxis = -tAxis
+			tAngle = -tAngle
 		end
-		rAngleC = math.min(math.max(rAngle,self.constraint.minAng),self.constraint.maxAng)
-		r = cpml.quat.from_angle_axis( rAngleC, rAxis )
-		print(rAngle, rAngleC, self.constraint.minAng, self.constraint.maxAng )
+		tAngle = angleRange( tAngle )
+		tAngleC = math.min(math.max(tAngle,self.constraint.minAng),self.constraint.maxAng)
+		r = cpml.quat.from_angle_axis( tAngleC, tAxis )
 	end
 	self.lRot = r
 end
@@ -40,6 +52,7 @@ function Bone:getPos()
 		pRot = self.parent:getRot()
 		--r = self.lRot*pRot
 		self.pos = pPos + cpml.quat.mul_vec3( pRot, self.lPos )
+
 	else
 		self.pos = self.lPos
 	end

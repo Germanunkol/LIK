@@ -8,17 +8,26 @@ local class = require("lib.middleclass.middleclass")
 local cpml = require("lib.cpml")
 
 function love.load()
-	print("Sample started")
-	skel = Skeleton:new()
 	vZero = cpml.vec3(0,0,0)
 
-	b1 = Bone:new( skel, nil, vZero, cpml.quat(), 0.2 )
-	b2 = Bone:new( skel, b1, vZero, cpml.quat(), 0.2 )
-	b3 = Bone:new( skel, b2, vZero, cpml.quat(), 0.2 )
+	skel1 = Skeleton:new()
 
-	b2:setConstraint( cpml.vec3(0,0,1), -math.pi*0.01, math.pi*0.1 )
+	b1_1 = Bone:new( skel1, nil, vZero, cpml.quat(), 0.2 )
+	b1_2 = Bone:new( skel1, b1_1, vZero, cpml.quat(), 0.2 )
+	b1_3 = Bone:new( skel1, b1_2, vZero, cpml.quat(), 0.2 )
+	spine1 = { b1_1, b1_2, b1_3 }
 
-	spine = { b1, b2, b3 }
+	skel2 = Skeleton:new()
+
+	b2_1 = Bone:new( skel2, nil, vZero, cpml.quat(), 0.2 )
+	b2_2 = Bone:new( skel2, b2_1, vZero, cpml.quat(), 0.2 )
+	b2_3 = Bone:new( skel2, b2_2, vZero, cpml.quat(), 0.2 )
+
+	b2_2:setConstraint( cpml.vec3(0,0,1), -math.pi*0.1, math.pi*0.1 )
+	b2_3:setConstraint( cpml.vec3(0,0,1), -math.pi*0.2, math.pi*0.2 )
+
+	--b2:setConstraint( cpml.vec3(0,1,1), -math.pi*0.01, math.pi*0.1 )
+	
 	--[[rot1 = cpml.quat.from_angle_axis(math.pi*0.5, cpml.vec3(0,0,1))
 	rot2 = cpml.quat.from_angle_axis(-math.pi*0.5, cpml.vec3(0,0,1))
 	spine = {}
@@ -40,10 +49,11 @@ function love.load()
 end
 
 function love.draw()
-	data = skel:getDebugData()
+	data = skel1:getDebugData()
 
 	love.graphics.push()
 	love.graphics.translate( love.graphics.getWidth()*0.5, love.graphics.getHeight()*0.5 )
+	love.graphics.translate( 0, -50 )
 	love.graphics.scale( 200 )
 	love.graphics.setLineWidth( 1/200 )
 	for i,d in ipairs(data) do
@@ -59,6 +69,28 @@ function love.draw()
 		end
 	end
 	love.graphics.pop()
+
+	data = skel2:getDebugData()
+
+	love.graphics.push()
+	love.graphics.translate( love.graphics.getWidth()*0.5, love.graphics.getHeight()*0.5 )
+	love.graphics.translate( 0, 50 )
+	love.graphics.scale( 200 )
+	love.graphics.setLineWidth( 1/200 )
+	for i,d in ipairs(data) do
+		love.graphics.setColor( d.col )
+		if d.drawType == "line" then
+			love.graphics.line( d.p0.x, d.p0.y, d.p1.x, d.p1.y )
+		elseif d.drawType == "tri" then
+			love.graphics.polygon( "fill",
+				d.p0.x, d.p0.y,
+				d.p1.x, d.p1.y,
+				d.p2.x, d.p2.y,
+				d.p3.x, d.p3.y )
+		end
+	end
+	love.graphics.pop()
+
 end
 
 function love.update( dt )
@@ -74,14 +106,10 @@ function love.update( dt )
 	q2 = cpml.quat.from_angle_axis( ang, cpml.vec3(0,0,1) )
 	b3:setLocalRot( q2 )]]
 	
-	i = 0
-	for i,b in pairs( spine ) do
-		if i == 2 then
-			--ang = math.sin(t*0.5+i)
-			ang = t
-			q2 = cpml.quat.from_angle_axis( ang, cpml.vec3(0,0,1) )
-			b:setLocalRot( q2 )
-			i = i+1
-		end
-	end
+	ang = t
+	q2 = cpml.quat.from_angle_axis( ang, cpml.vec3(0,0,1) )
+	b1_2:setLocalRot( q2 )
+	b1_3:setLocalRot( q2 )
+	b2_2:setLocalRot( q2 )
+	b2_3:setLocalRot( q2 )
 end
