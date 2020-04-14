@@ -21,7 +21,7 @@ function Skeleton:getDebugData()
 		len = cpml.vec3.len( pS - pE )
 		--r = b:getRot()
 		--tmp = cpml.vec3( 1,0,0 )
-		w = 0.05
+		w = 0.15
 		pO0 = b:toGlobal( cpml.vec3( len*0.05, len*w, 0 ) )
 		pO1 = b:toGlobal( cpml.vec3( len*0.05, -len*w, 0 ) )
 
