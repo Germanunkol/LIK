@@ -13,8 +13,13 @@ function love.load()
 	vZero = cpml.vec3(0,0,0)
 
 	b1 = Bone:new( skel, nil, vZero, cpml.quat(), 0.2 )
-	b = b1
-	rot1 = cpml.quat.from_angle_axis(math.pi*0.5, cpml.vec3(0,0,1))
+	b2 = Bone:new( skel, b1, vZero, cpml.quat(), 0.2 )
+	b3 = Bone:new( skel, b2, vZero, cpml.quat(), 0.2 )
+
+	b2:setConstraint( cpml.vec3(0,0,1), -math.pi*0.01, math.pi*0.1 )
+
+	spine = { b1, b2, b3 }
+	--[[rot1 = cpml.quat.from_angle_axis(math.pi*0.5, cpml.vec3(0,0,1))
 	rot2 = cpml.quat.from_angle_axis(-math.pi*0.5, cpml.vec3(0,0,1))
 	spine = {}
 	table.insert(spine, b1)
@@ -31,7 +36,7 @@ function love.load()
 	end
 
 	rot = cpml.quat.from_angle_axis(math.pi, cpml.vec3(0,0,1))
-	b4 = Bone:new( skel, b1, cpml.vec3(-0.5,0,0), rot, 0.5 )
+	b4 = Bone:new( skel, b1, cpml.vec3(-0.5,0,0), rot, 0.5 )]]
 end
 
 function love.draw()
@@ -71,9 +76,12 @@ function love.update( dt )
 	
 	i = 0
 	for i,b in pairs( spine ) do
-		ang = math.sin(t*0.5+i)
-		q2 = cpml.quat.from_angle_axis( ang, cpml.vec3(0,0,1) )
-		b:setLocalRot( q2 )
-		i = i+1
+		if i == 2 then
+			--ang = math.sin(t*0.5+i)
+			ang = t
+			q2 = cpml.quat.from_angle_axis( ang, cpml.vec3(0,0,1) )
+			b:setLocalRot( q2 )
+			i = i+1
+		end
 	end
 end
