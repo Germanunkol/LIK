@@ -101,4 +101,76 @@ function Bone:setConstraint( axis, minAng, maxAng )
 	}
 end
 
+function Bone:getDebugData()
+	local data = {}
+	print("data")
+
+	local pS = self:getPos()
+	local pE = self:getEndPos()
+	local len = cpml.vec3.len( pS - pE )
+	--r = b:getRot()
+	--tmp = cpml.vec3( 1,0,0 )
+	local w = 0.15
+	local pO0 = self:toGlobal( cpml.vec3( len*0.05, len*w, 0 ) )
+	local pO1 = self:toGlobal( cpml.vec3( len*0.05, -len*w, 0 ) )
+
+	-- Insert a triangle:
+	local d = { col={0.25,0.25,0.5, 0.9},
+		drawType="tri",
+		p0=pS,
+		p1=pO0,
+		p2=pE,
+		p3=pO1,
+	}
+	table.insert( data, d )
+	print(d, #data)
+
+	-- Insert a line:
+	local d = { col={0.9,0.9,0.9, 0.9},
+		drawType="line",
+		p0=pS,
+		p1=pE
+	}
+	table.insert( data, d )
+	print(d, #data)
+
+	-- Draw constraint, if any:
+	if self.constraint then
+		local minRot = cpml.quat.from_angle_axis( self.constraint.minAng,
+				self.constraint.axis )
+		local maxRot = cpml.quat.from_angle_axis( self.constraint.maxAng,
+				self.constraint.axis )
+		print(minRot, maxRot)
+
+		-- My end pos in local coordinates...
+		local lEndPos = cpml.vec3( self.len,0,0 )
+		-- ... rotated by the constraints:
+		local lEndPosRotMin = cpml.quat.mul_vec3( minRot, lEndPos )
+		local lEndPosRotMax = cpml.quat.mul_vec3( maxRot, lEndPos )
+
+		local pMin, pMax = lEndPosRotMin, lEndPosRotMax
+		if self.parent then
+			endPosRotMinParent = cpml.quat.mul_vec3( self.parent:getRot(), lEndPosRotMin )
+			pMin = self.parent:getEndPos() + endPosRotMinParent
+			
+			endPosRotMaxParent = cpml.quat.mul_vec3( self.parent:getRot(), lEndPosRotMax )
+			pMax = self.parent:getEndPos() + endPosRotMaxParent
+		end
+		
+		local d = { col={0.9,0.2,0.2,0.9},
+			drawType="line",
+			p0=pS,
+			p1=pMin
+		}
+		table.insert( data, d )
+		local d = { col={0.9,0.2,0.2,0.9},
+			drawType="line",
+			p0=pS,
+			p1=pMax
+		}
+		table.insert( data, d )
+	end
+	return data
+end
+
 return Bone

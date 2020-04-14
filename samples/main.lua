@@ -23,8 +23,9 @@ function love.load()
 	b2_2 = Bone:new( skel2, b2_1, vZero, cpml.quat(), 0.2 )
 	b2_3 = Bone:new( skel2, b2_2, vZero, cpml.quat(), 0.2 )
 
-	b2_2:setConstraint( cpml.vec3(0,0,1), -math.pi*0.1, math.pi*0.1 )
-	b2_3:setConstraint( cpml.vec3(0,0,1), -math.pi*0.2, math.pi*0.2 )
+	b2_1:setConstraint( cpml.vec3(0,0,1), -math.pi, math.pi*0.1 )
+	b2_2:setConstraint( cpml.vec3(0,0,1), math.pi*0.5, math.pi*0.5 )
+	b2_3:setConstraint( cpml.vec3(0,0,1), 0, math.pi*0.2 )
 
 	--b2:setConstraint( cpml.vec3(0,1,1), -math.pi*0.01, math.pi*0.1 )
 	
@@ -108,8 +109,11 @@ function love.update( dt )
 	
 	ang = t
 	q2 = cpml.quat.from_angle_axis( ang, cpml.vec3(0,0,1) )
+	b1_1:setLocalRot( q2 )
 	b1_2:setLocalRot( q2 )
 	b1_3:setLocalRot( q2 )
+
+	b2_1:setLocalRot( q2 )
 	b2_2:setLocalRot( q2 )
 	b2_3:setLocalRot( q2 )
 end
