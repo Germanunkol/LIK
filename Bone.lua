@@ -7,10 +7,11 @@ local Bone = class("Bone")
 function Bone:initialize( skeleton, parent, basePos, baseRot, length )
 	self.skeleton = skeleton
 	self.parent = parent or nil
-	self.basePos = basePos or cpml.vec3(0,0,0)
-	self.baseRot = baseRot or cpml.quat(0,0,0,1)
-	self:setLocalPos( self.basePos )
-	self:setLocalRot( self.baseRot )
+	basePos = basePos or cpml.vec3(0,0,0)
+	baseRot = baseRot or cpml.quat(0,0,0,1)
+	self:setLocalPos( basePos )
+	self:setLocalRot( baseRot )
+	self.baseRot = baseRot		-- Remember choise, important for constraints later on
 	self.len = length or 0
 	if self.skeleton then
 		self.skeleton:addBone( self )
@@ -24,7 +25,7 @@ end
 
 function Bone:setPos( p )
 	if self.parent then
-		lp = self.parent:toLocal( p )
+		lp = self.parent:toLocalPos( p )
 		self:setLocalPos( lp )
 	else
 		self:setLocalPos( p )
@@ -57,7 +58,6 @@ function Bone:getPos()
 		pRot = self.parent:getRot()
 		--r = self.lRot*pRot
 		self.pos = pPos + cpml.quat.mul_vec3( pRot, self.lPos )
-
 	else
 		self.pos = self.lPos
 	end
@@ -147,12 +147,14 @@ function Bone:getDebugData()
 		local lEndPosRotMin = cpml.quat.mul_vec3( minRot, lEndPos )
 		local lEndPosRotMax = cpml.quat.mul_vec3( maxRot, lEndPos )
 
-		local pMin, pMax = lEndPosRotMin, lEndPosRotMax
+		local pMin, pMax = lEndPosRotMin+pS, lEndPosRotMax+pS
 		if self.parent then
-			endPosRotMinParent = cpml.quat.mul_vec3( self.parent:getRot(), lEndPosRotMin )
+			endPosRotMinParent = cpml.quat.mul_vec3( self.parent:getRot(),
+					lEndPosRotMin + self.lPos )
 			pMin = self.parent:getEndPos() + endPosRotMinParent
 			
-			endPosRotMaxParent = cpml.quat.mul_vec3( self.parent:getRot(), lEndPosRotMax )
+			endPosRotMaxParent = cpml.quat.mul_vec3( self.parent:getRot(),
+					lEndPosRotMax + self.lPos )
 			pMax = self.parent:getEndPos() + endPosRotMaxParent
 		end
 		
@@ -169,6 +171,19 @@ function Bone:getDebugData()
 		}
 		table.insert( data, d )
 	end
+	-- If I am connected to a parent, draw a transparent line connecting me to it:
+	if self.parent then
+		parentS = self.parent:getEndPos()
+		myS = self:getPos()
+		-- Insert a line:
+		local d = { col={0.9,0.9,0.9, 0.3},
+			drawType="line",
+			p0=parentS,
+			p1=myS
+		}
+		table.insert( data, d )
+	end
+
 	return data
 end
 
