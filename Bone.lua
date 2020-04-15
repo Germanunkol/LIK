@@ -7,14 +7,28 @@ local Bone = class("Bone")
 function Bone:initialize( skeleton, parent, basePos, baseRot, length )
 	self.skeleton = skeleton
 	self.parent = parent or nil
-	self:setLocalPos( basePos or cpml.vec3(0,0,0) )
-	self:setLocalRot( baseRot or cpml.quat(0,0,0,1) )
+	self.basePos = basePos or cpml.vec3(0,0,0)
+	self.baseRot = baseRot or cpml.quat(0,0,0,1)
+	self:setLocalPos( self.basePos )
+	self:setLocalRot( self.baseRot )
 	self.len = length or 0
-	self.skeleton:addBone( self )
+	if self.skeleton then
+		self.skeleton:addBone( self )
+	end
 end
 
+-- Set local pos, i.e. pos in the parent's space:
 function Bone:setLocalPos( p )
 	self.lPos = p
+end
+
+function Bone:setPos( p )
+	if self.parent then
+		lp = self.parent:toLocal( p )
+		self:setLocalPos( lp )
+	else
+		self:setLocalPos( p )
+	end
 end
 
 function Bone:setLocalRot( r )
@@ -50,7 +64,7 @@ function Bone:getPos()
 	return self.pos
 end
 function Bone:getEndPos()
-	return self:toGlobal( cpml.vec3( self.len,0,0 ) )
+	return self:toGlobalPos( cpml.vec3( self.len,0,0 ) )
 end
 function Bone:getRot()
 	if self.parent then
@@ -61,11 +75,19 @@ function Bone:getRot()
 	end
 	return self.rot
 end
-function Bone:toGlobal( vec )
+function Bone:toGlobalPos( pos )
 	p = self:getPos()
 	r = self:getRot()
-	rotated = cpml.quat.mul_vec3( r, vec )
+	rotated = cpml.quat.mul_vec3( r, pos )
 	return p + rotated
+end
+function Bone:toLocalPos( pos )
+	p = self:getPos()
+	r = self:getRot()
+	diff = pos - p
+	rInv = cpml.quat.inverse( r )
+	lPos = cpml.quat.mul_vec3( rInv, diff )
+	return lPos
 end
 
 function Bone:setConstraint( axis, minAng, maxAng )
@@ -91,8 +113,8 @@ function Bone:getDebugData()
 	--r = b:getRot()
 	--tmp = cpml.vec3( 1,0,0 )
 	local w = 0.15
-	local pO0 = self:toGlobal( cpml.vec3( len*0.05, len*w, 0 ) )
-	local pO1 = self:toGlobal( cpml.vec3( len*0.05, -len*w, 0 ) )
+	local pO0 = self:toGlobalPos( cpml.vec3( len*0.05, len*w, 0 ) )
+	local pO1 = self:toGlobalPos( cpml.vec3( len*0.05, -len*w, 0 ) )
 
 	-- Insert a triangle:
 	local d = { col={0.25,0.25,0.5, 0.9},
@@ -149,5 +171,46 @@ function Bone:getDebugData()
 	end
 	return data
 end
+
+function test()
+	math.randomseed(123)
+	local pos = cpml.vec3(math.random(), math.random(), math.random())
+	local rot = cpml.quat.from_angle_axis( math.random(), cpml.vec3(0,0,1) )
+	local b1 = Bone:new( nil, nil, pos, rot, math.random() )
+
+	local pos = cpml.vec3(math.random(), math.random(), math.random())
+	local rot = cpml.quat.from_angle_axis( math.random(), cpml.vec3(0,0,1) )
+	local b2 = Bone:new( nil, b1, pos, rot, math.random() )
+
+	local pos = cpml.vec3(math.random(), math.random(), math.random())
+	local rot = cpml.quat.from_angle_axis( math.random(), cpml.vec3(0,0,1) )
+	local b3 = Bone:new( nil, b2, pos, rot, math.random() )
+
+	print("Testing Bone 1:")
+	local globalPos = cpml.vec3(math.random(), math.random(), math.random())
+	local localPos = b1:toLocalPos( globalPos )
+	local globalPosRecon = b1:toGlobalPos( localPos )
+	print("Global pos", globalPos)
+	print("Local pos", localPos)
+	print("Global pos recon", globalPosRecon)
+
+	print("Testing Bone 2:")
+	local globalPos = cpml.vec3(math.random(), math.random(), math.random())
+	local localPos = b2:toLocalPos( globalPos )
+	local globalPosRecon = b2:toGlobalPos( localPos )
+	print("Global pos", globalPos)
+	print("Local pos", localPos)
+	print("Global pos recon", globalPosRecon)
+	
+	print("Testing Bone 3:")
+	local globalPos = cpml.vec3(math.random(), math.random(), math.random())
+	local localPos = b3:toLocalPos( globalPos )
+	local globalPosRecon = b3:toGlobalPos( localPos )
+	print("Global pos", globalPos)
+	print("Local pos", localPos)
+	print("Global pos recon", globalPosRecon)
+end
+
+test()
 
 return Bone
