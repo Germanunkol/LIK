@@ -11,7 +11,6 @@ function Bone:initialize( skeleton, parent, basePos, baseRot, length )
 	baseRot = baseRot or cpml.quat(0,0,0,1)
 	self:setLocalPos( basePos )
 	self:setLocalRot( baseRot )
-	self.baseRot = baseRot		-- Remember choise, important for constraints later on
 	self.len = length or 0
 	if self.skeleton then
 		self.skeleton:addBone( self )
@@ -30,6 +29,13 @@ function Bone:setPos( p )
 	else
 		self:setLocalPos( p )
 	end
+end
+
+-- Move a bone while keeping its child fixed (all other children are moved)
+function Bone:setPosFixedChild( p, child )
+	origChildPos = child:getPos()
+	self:setPos( p )
+	child:setPos( origChildPos )
 end
 
 function Bone:setLocalRot( r )
@@ -54,7 +60,7 @@ function Bone:setLocalRot( r )
 end
 function Bone:getPos()
 	if self.parent then
-		pPos = self.parent:getEndPos()
+		pPos = self.parent:getPos()
 		pRot = self.parent:getRot()
 		--r = self.lRot*pRot
 		self.pos = pPos + cpml.quat.mul_vec3( pRot, self.lPos )
@@ -142,7 +148,7 @@ function Bone:getDebugData()
 				self.constraint.axis )
 
 		-- My end pos in local coordinates...
-		local lEndPos = cpml.vec3( self.len,0,0 )
+		local lEndPos = cpml.vec3( self.len*0.5,0,0 )
 		-- ... rotated by the constraints:
 		local lEndPosRotMin = cpml.quat.mul_vec3( minRot, lEndPos )
 		local lEndPosRotMax = cpml.quat.mul_vec3( maxRot, lEndPos )
@@ -151,11 +157,11 @@ function Bone:getDebugData()
 		if self.parent then
 			endPosRotMinParent = cpml.quat.mul_vec3( self.parent:getRot(),
 					lEndPosRotMin + self.lPos )
-			pMin = self.parent:getEndPos() + endPosRotMinParent
+			pMin = self.parent:getPos() + endPosRotMinParent
 			
 			endPosRotMaxParent = cpml.quat.mul_vec3( self.parent:getRot(),
 					lEndPosRotMax + self.lPos )
-			pMax = self.parent:getEndPos() + endPosRotMaxParent
+			pMax = self.parent:getPos() + endPosRotMaxParent
 		end
 		
 		local d = { col={0.9,0.2,0.2,0.9},
@@ -173,7 +179,7 @@ function Bone:getDebugData()
 	end
 	-- If I am connected to a parent, draw a transparent line connecting me to it:
 	if self.parent then
-		parentS = self.parent:getEndPos()
+		parentS = self.parent:getPos()
 		myS = self:getPos()
 		-- Insert a line:
 		local d = { col={0.9,0.9,0.9, 0.3},
@@ -224,6 +230,11 @@ function test()
 	print("Global pos", globalPos)
 	print("Local pos", localPos)
 	print("Global pos recon", globalPosRecon)
+
+	print("Setting:", globalPos)
+	b1:setPos( globalPos )
+	setPos = b1:getPos()
+	print("Set to:", setPos )
 end
 
 test()

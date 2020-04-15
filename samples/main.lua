@@ -3,6 +3,7 @@ package.path = "../?/init.lua;" .. package.path
 
 local Skeleton = require("Skeleton")
 local Bone = require("Bone")
+local Fabrik = require("Fabrik")
 
 local class = require("lib.middleclass.middleclass")
 local cpml = require("lib.cpml")
@@ -53,13 +54,12 @@ function love.load()
 	setupCreature()
 end
 
-function drawSkel( skel, x, y, scale )
+function drawSkel( skel, x, y )
 	data = skel:getDebugData()
 
 	love.graphics.push()
-	love.graphics.translate( love.graphics.getWidth()*0.5, love.graphics.getHeight()*0.5 )
 	love.graphics.translate( x, y )
-	love.graphics.scale( scale )
+	--love.graphics.scale( scale )
 	love.graphics.setLineWidth( 1/200 )
 	for i,d in ipairs(data) do
 		love.graphics.setColor( d.col )
@@ -76,11 +76,31 @@ function drawSkel( skel, x, y, scale )
 	love.graphics.pop()
 end
 
+function drawGrid()
+	love.graphics.setColor( 1,1,1,0.1 )
+	for x=-1,1,0.1 do
+		love.graphics.line( x, -1, x, 1 )
+	end
+	for y=-1,1,0.1 do
+		love.graphics.line( -1, y, 1, y )
+	end
+	love.graphics.setColor( 1,1,1,0.3 )
+	love.graphics.line( 0, -1, 0, 1 )
+	love.graphics.line( -1, 0, 1, 0 )
+end
+
 function love.draw()
 	--[[drawSkel( skel1, -250, 0, 200 )
 	drawSkel( skel2, -50, 0, 200 )
 	drawSkel( skel3, 150, 0, 200 )]]
-	drawSkel( skel, 0, 0, 300 )
+	love.graphics.translate( love.graphics.getWidth()*0.5, love.graphics.getHeight()*0.5 )
+	love.graphics.scale( 300 )
+
+	drawGrid()
+
+	drawSkel( skel, 0, 0 )
+	love.graphics.setColor( 1,0.3,0.3,1 )
+	love.graphics.circle( "fill", targetPos.x, targetPos.y, 0.03 )
 end
 
 function love.update( dt )
@@ -112,7 +132,17 @@ function love.update( dt )
 	b3_4:setLocalRot( q2 )
 	b3_5:setLocalRot( q2 )]]
 
+	targetPos = cpml.vec3( math.sin(t*0.25)*1, math.cos(t*0.5+1)*0.75, 0 )
+	--spine[1]:setPos( cpml.vec3( 0, 0.2, 0 ) )
+	--spine[4]:setPos( targetPos )
+
 	moveCreature()
+end
+
+function love.keypressed( key )
+	if key == "space" then
+		Fabrik.solve( spine, targetPos, 20 )
+	end
 end
 
 function addLegs( p )
@@ -135,24 +165,26 @@ end
 function setupCreature()
 	skel = Skeleton()
 	spine = {}
-	pos = cpml.vec3(0,0,0)
+	pos = cpml.vec3(0.2,0,0)
 	rot = cpml.quat()
 	for i=1,5 do
 		b = Bone:new( skel, spine[i-1], pos, rot, 0.2 )
+		pos = cpml.vec3( 0.2,0,0 )
 		b:setConstraint( cpml.vec3(0,0,1), -math.pi*0.2, math.pi*0.2 )
 		table.insert( spine, b )
 		if i <= 3 then
-			addLegs( b )
+			--addLegs( b )
 		end
 	end
 	neck = {}
 	rot0 = cpml.quat.from_angle_axis( math.pi, cpml.vec3(0,0,1) )
-	pos0 = cpml.vec3( -0.4,0,0 )
+	pos0 = cpml.vec3( -0.2,0,0 )
 	b = Bone:new( skel, spine[1], pos0, rot0, 0.15 )
 	b:setConstraint( cpml.vec3(0,0,1), -math.pi, -math.pi)
 	table.insert( neck, b )
 	for i=2,3 do
 		parent = neck[i-1]
+		pos = cpml.vec3( 0.2,0,0 )
 		b = Bone:new( skel, neck[i-1], pos, rot, 0.15 )
 		table.insert( neck, b )
 	end
