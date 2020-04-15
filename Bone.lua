@@ -88,11 +88,11 @@ function Bone:toGlobalPos( pos )
 	return p + rotated
 end
 function Bone:toLocalPos( pos )
-	p = self:getPos()
-	r = self:getRot()
-	diff = pos - p
-	rInv = cpml.quat.inverse( r )
-	lPos = cpml.quat.mul_vec3( rInv, diff )
+	local p = self:getPos()
+	local r = self:getRot()
+	local diff = pos - p
+	local rInv = cpml.quat.inverse( r )
+	local lPos = cpml.quat.mul_vec3( rInv, diff )
 	return lPos
 end
 

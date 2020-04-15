@@ -136,7 +136,7 @@ function love.update( dt )
 	--spine[1]:setPos( cpml.vec3( 0, 0.2, 0 ) )
 	--spine[4]:setPos( targetPos )
 
-	moveCreature()
+	--moveCreature()
 end
 
 function love.keypressed( key )
