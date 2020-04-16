@@ -61,7 +61,6 @@ end
 ]]
 
 function Bone:setLocalRot( r )
-	print("Set local rot", cpml.quat.to_angle_axis(r))
 	if self.constraint ~= nil then
 		origAngle, origAxis = cpml.quat.to_angle_axis( r )
 		-- Find component which rotates around the self constraint axis (twist)
@@ -228,6 +227,7 @@ function Bone:getDebugData()
 end
 
 function test()
+	print("Testing Bone functions")
 	math.randomseed(123)
 	local pos = cpml.vec3(math.random(), math.random(), math.random())
 	local rot = cpml.quat.from_angle_axis( math.random(), cpml.vec3(0,0,1) )
@@ -269,6 +269,7 @@ function test()
 	b1:setPos( globalPos )
 	setPos = b1:getPos()
 	print("Set to:", setPos )
+	print("End test")
 end
 
 test()

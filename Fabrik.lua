@@ -65,19 +65,6 @@ function Fabrik.solve( chain, targetPos, maxIterations, debugSteps )
 		end
 	end
 
-				
-	local b = chain[#chain-1]
-	local child = chain[#chain]
-	local dir = cpml.vec3.normalize( child:getPos() - b:getPos() )
-	print( "dir", dir )
-	local r = rotBetweenVecs( cpml.vec3(1,0,0), dir )
-	--print( cpml.quat.to_angle_axis( r ) )
-	--b:setRotFixedChild( r, child )
-	print("Set rot", cpml.quat.to_angle_axis(r) )
-	b:setRotFixedChild( r, child )
-		
-	local b = chain[#chain]
-	print("Done")
 end
 
 return Fabrik
