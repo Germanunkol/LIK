@@ -28,3 +28,11 @@ function swingTwistDecomposition( rotation, direction )
 	return swing, twist
 end
 
+function rotBetweenVecs( vec1, vec2 )
+	local rAxis = cpml.vec3.cross( vec1, vec2 )
+	local w = math.sqrt((cpml.vec3.len(vec1) ^ 2) * (cpml.vec3.len(vec2) ^ 2)) + cpml.vec3.dot(vec1, vec2);
+	local q = cpml.quat( rAxis.x, rAxis.y, rAxis.z, w )
+	return cpml.quat.normalize( q )
+end
+
+

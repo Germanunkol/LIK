@@ -38,7 +38,30 @@ function Bone:setPosFixedChild( p, child )
 	child:setPos( origChildPos )
 end
 
+function Bone:setRotFixedChild( r, child )
+	origChildPos = child:getPos()
+	origChildRot = child:getRot()
+	self:setRot( r )
+	child:setPos( origChildPos )
+	child:setRot( origChildRot )
+end
+
+--[[function Bone:rotateTo( pos )
+	rot = cpml.quat.from_direction( pos - self:getPos(), cpml.vec3(0,0,1) )
+	self:setRot( rot )
+end
+
+function Bone:rotateToFixedChild( pos )
+	
+end
+
+function Bone:validatePosWRTChild( child )
+
+end
+]]
+
 function Bone:setLocalRot( r )
+	print("Set local rot", cpml.quat.to_angle_axis(r))
 	if self.constraint ~= nil then
 		origAngle, origAxis = cpml.quat.to_angle_axis( r )
 		-- Find component which rotates around the self constraint axis (twist)
@@ -72,14 +95,30 @@ end
 function Bone:getEndPos()
 	return self:toGlobalPos( cpml.vec3( self.len,0,0 ) )
 end
-function Bone:getRot()
+function Bone:getRot( verbose )
 	if self.parent then
-		pRot = self.parent:getRot()
+		local pRot = self.parent:getRot()
+		if verbose then
+			print("Parent rot:", cpml.quat.to_angle_axis(pRot))
+			print("Self rot:", cpml.quat.to_angle_axis(self.lRot))
+		end
 		self.rot = self.lRot*pRot
 	else
 		self.rot = self.lRot
 	end
 	return self.rot
+end
+function Bone:setRot( r )
+	if self.parent then
+		print("Getparent rot")
+		local pRot = self.parent:getRot( true )
+		print("Parent rot:", cpml.quat.to_angle_axis(pRot))
+
+		local lRot = r*cpml.quat.inverse( pRot )
+		self:setLocalRot( lRot )
+	else
+		self:setLocalRot( r )
+	end
 end
 function Bone:toGlobalPos( pos )
 	p = self:getPos()
@@ -108,6 +147,7 @@ function Bone:setConstraint( axis, minAng, maxAng )
 		minAng=minAng,
 		maxAng=maxAng
 	}
+	self.constraint = nil
 end
 
 function Bone:getDebugData()

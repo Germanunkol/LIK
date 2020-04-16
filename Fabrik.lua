@@ -30,8 +30,6 @@ function Fabrik.solve( chain, targetPos, maxIterations, debugSteps )
 			curBone:setPosFixedChild( newPos, curChild )
 		end
 
-
-
 		-- Backward pass:
 		chain[1]:setPos( rootPos )
 		for j=2,#chain do
@@ -51,6 +49,50 @@ function Fabrik.solve( chain, targetPos, maxIterations, debugSteps )
 		end
 
 	end
+
+	--[[for j,b in ipairs( chain ) do
+		if j < #chain then
+			--if j == #chain-1 then
+			local child = chain[j+1]
+			local dir = cpml.vec3.normalize( child:getPos() - b:getPos() )
+			local r = rotBetweenVecs( cpml.vec3(1,0,0), dir )
+			--print( cpml.quat.to_angle_axis( r ) )
+				--b:setRotFixedChild( r, child )
+			print("Set rot", cpml.quat.to_angle_axis(r) )
+				b:setRot( r, child )
+			--end
+		end
+	end]]
+	local b = chain[#chain]
+	local dir = cpml.vec3.normalize( targetPos - b:getPos() )
+	print( "dir", dir )
+	local r = rotBetweenVecs( cpml.vec3(1,0,0), dir )
+	--print( cpml.quat.to_angle_axis( r ) )
+	--b:setRotFixedChild( r, child )
+	print("Set rot", cpml.quat.to_angle_axis(r) )
+	b:setRot( r )
+				
+	local b = chain[#chain-1]
+	local child = chain[#chain]
+	local dir = cpml.vec3.normalize( child:getPos() - b:getPos() )
+	print( "dir", dir )
+	local r = rotBetweenVecs( cpml.vec3(1,0,0), dir )
+	--print( cpml.quat.to_angle_axis( r ) )
+	--b:setRotFixedChild( r, child )
+	print("Set rot", cpml.quat.to_angle_axis(r) )
+	b:setRotFixedChild( r, child )
+		
+	local b = chain[#chain-2]
+	local child = chain[#chain-1]
+	local dir = cpml.vec3.normalize( child:getPos() - b:getPos() )
+	print( "dir", dir )
+	local r = rotBetweenVecs( cpml.vec3(1,0,0), dir )
+	--print( cpml.quat.to_angle_axis( r ) )
+	--b:setRotFixedChild( r, child )
+	print("Set rot", cpml.quat.to_angle_axis(r) )
+	b:setRotFixedChild( r, child )
+
+	print("Done")
 end
 
 return Fabrik

@@ -9,14 +9,16 @@ local class = require("lib.middleclass.middleclass")
 local cpml = require("lib.cpml")
 
 function love.load()
-	--[[vZero = cpml.vec3(0,0,0)
+	vZero = cpml.vec3(0,0,0)
 
 	skel1 = Skeleton:new()
 
 	b1_1 = Bone:new( skel1, nil, vZero, cpml.quat(), 0.2 )
-	b1_2 = Bone:new( skel1, b1_1, vZero, cpml.quat(), 0.2 )
-	b1_3 = Bone:new( skel1, b1_2, vZero, cpml.quat(), 0.2 )
+	b1_2 = Bone:new( skel1, b1_1, cpml.vec3(0.2,0,0), cpml.quat(), 0.2 )
+	b1_3 = Bone:new( skel1, b1_2, cpml.vec3(0.2,0,0), cpml.quat(), 0.2 )
 	spine1 = { b1_1, b1_2, b1_3 }
+
+	--[[
 
 	skel2 = Skeleton:new()
 
@@ -51,7 +53,10 @@ function love.load()
 
 
 	--b2:setConstraint( cpml.vec3(0,1,1), -math.pi*0.01, math.pi*0.1 )
-	setupCreature()
+	--setupCreature()
+	
+
+	prevTargetPos = cpml.vec3()
 end
 
 function drawSkel( skel, x, y )
@@ -98,9 +103,12 @@ function love.draw()
 
 	drawGrid()
 
-	drawSkel( skel, 0, 0 )
+	--drawSkel( skel, 0, 0 )
+	drawSkel( skel1, 0, 0 )
 	love.graphics.setColor( 1,0.3,0.3,1 )
 	love.graphics.circle( "fill", targetPos.x, targetPos.y, 0.03 )
+	love.graphics.setColor( 0.3,1,0.3,1 )
+	love.graphics.circle( "fill", prevTargetPos.x, prevTargetPos.y, 0.03 )
 end
 
 function love.update( dt )
@@ -137,28 +145,30 @@ function love.update( dt )
 	--spine[4]:setPos( targetPos )
 
 	--moveCreature()
+	--Fabrik.solve( spine, targetPos, 20 )
 end
 
 function love.keypressed( key )
 	if key == "space" then
-		Fabrik.solve( spine, targetPos, 20 )
+		Fabrik.solve( spine1, targetPos, 20 )
+		prevTargetPos = targetPos
 	end
 end
 
 function addLegs( p )
 	-- Left:
 	local bThighL = Bone:new( p.skeleton, p,
-			cpml.vec3( -p.len*0.5, p.len*0.25, 0 ),
+			cpml.vec3( p.len*0.5, p.len*0.25, 0 ),
 			cpml.quat.from_angle_axis( math.pi*0.5, cpml.vec3(0,0,1) ), p.len*0.75 )
 	local bShinL = Bone:new( p.skeleton, bThighL,
-			cpml.vec3(),
+			cpml.vec3( bThighL.len,0,0 ),
 			cpml.quat.from_angle_axis( math.pi*0.1, cpml.vec3(0,0,1) ), p.len*0.5 )
 	-- Right:
 	local bThighR = Bone:new( p.skeleton, p,
-			cpml.vec3( -p.len*0.5, -p.len*0.25, 0 ),
+			cpml.vec3( p.len*0.5, -p.len*0.25, 0 ),
 			cpml.quat.from_angle_axis( -math.pi*0.5, cpml.vec3(0,0,1) ), p.len*0.75 )
 	local bShinR = Bone:new( p.skeleton, bThighR,
-			cpml.vec3(),
+			cpml.vec3( bThighR.len,0,0 ),
 			cpml.quat.from_angle_axis( -math.pi*0.1, cpml.vec3(0,0,1) ), p.len*0.5 )
 end
 
@@ -168,8 +178,9 @@ function setupCreature()
 	pos = cpml.vec3(0.2,0,0)
 	rot = cpml.quat()
 	for i=1,5 do
-		b = Bone:new( skel, spine[i-1], pos, rot, 0.2 )
-		pos = cpml.vec3( 0.2,0,0 )
+		len = 0.25/i + 0.05
+		b = Bone:new( skel, spine[i-1], pos, rot, len )
+		pos = cpml.vec3( len,0,0 )	-- Position of next bone
 		b:setConstraint( cpml.vec3(0,0,1), -math.pi*0.2, math.pi*0.2 )
 		table.insert( spine, b )
 		if i <= 3 then
