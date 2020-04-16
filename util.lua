@@ -35,10 +35,21 @@ function rotBetweenVecs( vec1, vec2 )
 	return cpml.quat.normalize( q )
 end
 
-function angBetweenVecs( vec1, vec2 )
+function angBetweenVecs( vec1, vec2, up )
 	local l1 = cpml.vec3.len( vec1 )
 	local l2 = cpml.vec3.len( vec2 )
-	return math.acos( cpml.vec3.dot( vec1,vec2 )/(l1*l2) )
+	local ang = math.acos( cpml.vec3.dot( vec1,vec2 )/(l1*l2) )
+	-- If no "up" direction is given, simply return the angle (will always be positive)
+	if up == nil then
+		return ang
+	end
+	local cross = cpml.vec3.cross( vec1, vec2 )
+	-- Check if the cross product is "facing upwards" or "downwards":
+	if cpml.vec3.dist( up, cross ) < cpml.vec3.dist( up, -cross ) then
+		return -ang
+	else
+		return ang
+	end
 end
 
 

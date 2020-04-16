@@ -19,6 +19,7 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 		chain[#chain]:setPos( targetPos )
 		targetRot = rotBetweenVecs( cpml.vec3(1,0,0), targetDir )
 		chain[#chain]:setRot( targetRot, true )
+		-- DEBUG: 2
 		for j=#chain-1,1,-1 do
 			local curBone = chain[j]
 			local curChild = chain[j+1]
@@ -32,7 +33,7 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 			curBone:setPosFixedChild( newPos, curChild )
 
 			-- If I don't have a constraint, simply rotate the bone towards the child:
-			if not curBone.constraint then	
+			if not curChild.constraint then	
 				local dirToChild = cpml.vec3.normalize( curChildPos - curPos )
 				local r = rotBetweenVecs( cpml.vec3(1,0,0), dirToChild )
 				curBone:setRotFixedChild( r, curChild )
@@ -43,7 +44,7 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 		end
 
 		-- Backward pass:
-		chain[1]:setPos( rootPos )
+		--[[chain[1]:setPos( rootPos )
 		for j=2,#chain do
 			curBone = chain[j]
 			curParent = chain[j-1]
@@ -58,16 +59,16 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 			else
 				curBone:setPos( newPos )
 			end
-		end
+		end]]
 
 	end
 
 	--[[for j,b in ipairs( chain ) do
 		-- Let last element point towards target:
 		if j == #chain then
-			local dir = cpml.vec3.normalize( targetPos - b:getPos() )
-			local r = rotBetweenVecs( cpml.vec3(1,0,0), dir )
-			b:setRot( r )
+			--local dir = cpml.vec3.normalize( targetPos - b:getPos() )
+			--local r = rotBetweenVecs( cpml.vec3(1,0,0), dir )
+			--b:setRot( r )
 		-- Let other elements point towards their child:
 		else
 			local child = chain[j+1]
