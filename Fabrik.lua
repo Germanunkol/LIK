@@ -32,20 +32,24 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 
 			curBone:setPosFixedChild( newPos, curChild )
 
-			-- If I don't have a constraint, simply rotate the bone towards the child:
-			if not curChild.constraint then	
-				local dirToChild = cpml.vec3.normalize( curChildPos - curPos )
-				local r = rotBetweenVecs( cpml.vec3(1,0,0), dirToChild )
-				curBone:setRotFixedChild( r, curChild )
-			-- If I do have a constraint, ensure my position is valid (if child is fixed)
-			else
+			-- If my child has a constraint, abide by it:
+			if curChild.constraint then
 				curBone:validatePosWRTChild( curChild )
 			end
+			--if not curChild.constraint then	
+				--local dirToChild = cpml.vec3.normalize( curChildPos - curPos )
+				--local r = rotBetweenVecs( cpml.vec3(1,0,0), dirToChild )
+				--curBone:setRotFixedChild( r, curChild )
+			-- If I do have a constraint, ensure my position is valid (if child is fixed)
+			--else
+				curBone:validatePosWRTChild( curChild )
+			--end
 		end
 
 		-- Backward pass:
-		--[[chain[1]:setPos( rootPos )
-		for j=2,#chain do
+		--chain[1]:setPos( rootPos )
+		--chain[1]:validateRot()
+		--[[for j=2,#chain do
 			curBone = chain[j]
 			curParent = chain[j-1]
 			curPos = curBone:getPos()
@@ -58,6 +62,11 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 				curBone:setPosFixedChild( newPos, chain[j+1] )
 			else
 				curBone:setPos( newPos )
+			end
+
+			-- If my parent has a constraint, abide by it:
+			if curParent.constraint then
+				curBone:validatePosWRTParent( curParent, chain[j+1] )
 			end
 		end]]
 

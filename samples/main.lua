@@ -13,12 +13,12 @@ function love.load()
 
 	skel1 = Skeleton:new()
 
-	b1_1 = Bone:new( skel1, nil, vZero, cpml.quat(), 0.3 )
-	b1_2 = Bone:new( skel1, b1_1, cpml.vec3(0.3,0,0), cpml.quat(), 0.2 )
-	b1_3 = Bone:new( skel1, b1_2, cpml.vec3(0.2,0,0), cpml.quat(), 0.1 )
+	b1_1 = Bone:new( skel1, nil, vZero, cpml.quat(), 0.2 )
+	b1_2 = Bone:new( skel1, b1_1, cpml.vec3(0.2,0,0), cpml.quat(), 0.2 )
+	b1_3 = Bone:new( skel1, b1_2, cpml.vec3(0.2,0,0), cpml.quat(), 0.2 )
 	spine1 = { b1_1, b1_2, b1_3 }
 
-	--b1_1:setConstraint( cpml.vec3(0,0,1), -math.pi*0.25, math.pi*0.25 )
+	b1_1:setConstraint( cpml.vec3(0,0,1), 0, 0 )
 	b1_2:setConstraint( cpml.vec3(0,0,1), -math.pi*0.05, math.pi*0.05 )
 	b1_3:setConstraint( cpml.vec3(0,0,1), -math.pi*0.25, math.pi*0.25 )
 

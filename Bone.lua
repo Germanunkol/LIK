@@ -79,10 +79,60 @@ function Bone:validatePosWRTChild( child )
 				child.constraint.axis ) 
 		self:setRotFixedChild( self:getRot()*correctionRot, child )
 	end
+	-- Move the bone so that it is facing the child:
+	local dir = self:getDir()
+	local dist = cpml.vec3.dist( self:getPos(), child:getPos() )
+	local newPos = child:getPos() - dir*dist
+	self:setPosFixedChild( newPos, child )
 	
 	print(tAngle)
 	--if tAngle > 
 end
+
+function Bone:validatePosWRTParent( parent, child )
+	-- Get rotation between my direction and the child direction:
+	local dir = self:getDir()
+	local parentDir = parent:getDir()
+	local rot = rotBetweenVecs( dir, parentDir )
+	-- Find component which rotates around the constraint axis (twist)
+	swing, twist = swingTwistDecomposition( rot, parent.constraint.axis )
+	print(swing)
+	-- TODO: "Undo" any swing rotation here
+	tAngle, tAxis = cpml.quat.to_angle_axis( twist )
+	if cpml.vec3.dist2( tAxis, parent.constraint.axis ) > 0.5 then
+		tAxis = -tAxis
+		tAngle = -tAngle
+	end
+	if tAngle < parent.constraint.minAng then
+		-- Project myself into the constraint bounds:
+		local minRot = cpml.quat.from_angle_axis( parent.constraint.minAng,
+				parent.constraint.axis )
+		local minDir = cpml.vec3.normalize( cpml.quat.mul_vec3( minRot, parent:getDir() ) )
+		local dist = cpml.vec3.dist( parent:getPos(), self:getPos() )
+		local newPos = parent:getPos() + minDir*dist
+		if child then
+			self:setPosFixedChild( newPos, child )
+		else
+			self:setPos( newPos )
+		end
+	elseif tAngle > parent.constraint.maxAng then
+		-- Project myself into the constraint bounds:
+		local maxRot = cpml.quat.from_angle_axis( parent.constraint.maxAng,
+				parent.constraint.axis )
+		local maxDir = cpml.vec3.normalize( cpml.quat.mul_vec3( maxRot, parent:getDir() ) )
+		local dist = cpml.vec3.dist( parent:getPos(), self:getPos() )
+		local newPos = parent:getPos() + maxDir*dist
+		if child then
+			self:setPosFixedChild( newPos, child )
+		else
+			self:setPos( newPos )
+		end
+	end
+	
+	print(tAngle)
+	--if tAngle > 
+end
+
 
 function Bone:setLocalRot( r, ignoreConstraint )
 	if not ignoreConstraint and self.constraint ~= nil then
@@ -103,6 +153,9 @@ function Bone:setLocalRot( r, ignoreConstraint )
 		r = cpml.quat.from_angle_axis( tAngleC, tAxis )
 	end
 	self.lRot = r
+end
+function Bone:validateRot()
+	self:setLocalRot( self.lRot )
 end
 
 function Bone:setLocalRotFixedChild( r, child )
