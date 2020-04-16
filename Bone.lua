@@ -95,13 +95,9 @@ end
 function Bone:getEndPos()
 	return self:toGlobalPos( cpml.vec3( self.len,0,0 ) )
 end
-function Bone:getRot( verbose )
+function Bone:getRot()
 	if self.parent then
 		local pRot = self.parent:getRot()
-		if verbose then
-			print("Parent rot:", cpml.quat.to_angle_axis(pRot))
-			print("Self rot:", cpml.quat.to_angle_axis(self.lRot))
-		end
 		self.rot = self.lRot*pRot
 	else
 		self.rot = self.lRot
@@ -110,9 +106,7 @@ function Bone:getRot( verbose )
 end
 function Bone:setRot( r )
 	if self.parent then
-		print("Getparent rot")
 		local pRot = self.parent:getRot( true )
-		print("Parent rot:", cpml.quat.to_angle_axis(pRot))
 
 		local lRot = r*cpml.quat.inverse( pRot )
 		self:setLocalRot( lRot )

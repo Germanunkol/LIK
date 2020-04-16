@@ -145,13 +145,13 @@ function love.update( dt )
 	--spine[4]:setPos( targetPos )
 
 	--moveCreature()
-	--Fabrik.solve( spine, targetPos, 20 )
+	Fabrik.solve( spine1, targetPos, 20 )
 end
 
 function love.keypressed( key )
 	if key == "space" then
 		Fabrik.solve( spine1, targetPos, 20 )
-		prevTargetPos = targetPos
+		--prevTargetPos = targetPos
 	end
 end
 
