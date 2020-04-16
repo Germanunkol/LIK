@@ -35,4 +35,10 @@ function rotBetweenVecs( vec1, vec2 )
 	return cpml.quat.normalize( q )
 end
 
+function angBetweenVecs( vec1, vec2 )
+	local l1 = cpml.vec3.len( vec1 )
+	local l2 = cpml.vec3.len( vec2 )
+	return math.acos( cpml.vec3.dot( vec1,vec2 )/(l1*l2) )
+end
+
 

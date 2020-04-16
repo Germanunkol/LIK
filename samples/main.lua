@@ -18,6 +18,10 @@ function love.load()
 	b1_3 = Bone:new( skel1, b1_2, cpml.vec3(0.2,0,0), cpml.quat(), 0.1 )
 	spine1 = { b1_1, b1_2, b1_3 }
 
+	b1_1:setConstraint( cpml.vec3(0,0,1), -math.pi*0.25, math.pi*0.25 )
+	--b1_2:setConstraint( cpml.vec3(0,0,1), -math.pi*0.25, math.pi*0.25 )
+	b1_3:setConstraint( cpml.vec3(0,0,1), -math.pi*0.25, math.pi*0.25 )
+
 	--[[
 
 	skel2 = Skeleton:new()
@@ -55,7 +59,7 @@ function love.load()
 	--b2:setConstraint( cpml.vec3(0,1,1), -math.pi*0.01, math.pi*0.1 )
 	--setupCreature()
 	
-
+	targetDir = cpml.vec3(1,1,0)
 	prevTargetPos = cpml.vec3()
 end
 
@@ -105,10 +109,12 @@ function love.draw()
 
 	--drawSkel( skel, 0, 0 )
 	drawSkel( skel1, 0, 0 )
-	love.graphics.setColor( 1,0.3,0.3,1 )
-	love.graphics.circle( "fill", targetPos.x, targetPos.y, 0.03 )
+	love.graphics.setColor( 0.4,0.5,1,1 )
+	love.graphics.circle( "fill", targetPos.x, targetPos.y, 0.02 )
+	local endPoint = targetPos + targetDir*0.05
+	love.graphics.line( targetPos.x, targetPos.y, endPoint.x, endPoint.y )
 	love.graphics.setColor( 0.3,1,0.3,1 )
-	love.graphics.circle( "fill", prevTargetPos.x, prevTargetPos.y, 0.03 )
+	love.graphics.circle( "fill", prevTargetPos.x, prevTargetPos.y, 0.02 )
 end
 
 function love.update( dt )
@@ -140,17 +146,17 @@ function love.update( dt )
 	b3_4:setLocalRot( q2 )
 	b3_5:setLocalRot( q2 )]]
 
-	targetPos = cpml.vec3( math.sin(t*0.25)*1, math.cos(t*0.5+1)*0.75, 0 )
+	targetPos = cpml.vec3( math.sin(t*0.25)*0.75, math.cos(t*0.4+1)*0.5, 0 )
 	--spine[1]:setPos( cpml.vec3( 0, 0.2, 0 ) )
 	--spine[4]:setPos( targetPos )
 
 	--moveCreature()
-	Fabrik.solve( spine1, targetPos, 20 )
+	Fabrik.solve( spine1, targetPos, targetDir, 20 )
 end
 
 function love.keypressed( key )
 	if key == "space" then
-		Fabrik.solve( spine1, targetPos, 20 )
+		Fabrik.solve( spine1, targetPos, targetDir, 20 )
 		--prevTargetPos = targetPos
 	end
 end
