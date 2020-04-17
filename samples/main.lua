@@ -19,8 +19,8 @@ function love.load()
 	spine1 = { b1_1, b1_2, b1_3 }
 
 	--b1_1:setConstraint( cpml.vec3(0,0,1), 0, 0 )
-	b1_2:setConstraint( cpml.vec3(0,0,1), -math.pi*0.05, math.pi*0.05 )
-	b1_3:setConstraint( cpml.vec3(0,0,1), -math.pi*0.25, math.pi*0.25 )
+	--b1_2:setConstraint( cpml.vec3(0,0,1), -math.pi*0.05, math.pi*0.05 )
+	--b1_3:setConstraint( cpml.vec3(0,0,1), -math.pi*0.25, math.pi*0.25 )
 
 	--[[
 
@@ -152,12 +152,12 @@ function love.update( dt )
 	--spine[4]:setPos( targetPos )
 
 	--moveCreature()
-	Fabrik.solve( spine1, targetPos, targetDir, 20 )
+	--Fabrik.solve( spine1, targetPos, targetDir, 20 )
 end
 
 function love.keypressed( key )
 	if key == "space" then
-		--Fabrik.solve( spine1, targetPos, targetDir, 20 )
+		Fabrik.solve( spine1, targetPos, targetDir, 20 )
 		--prevTargetPos = targetPos
 	end
 end

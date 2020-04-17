@@ -37,6 +37,11 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 			-- If my child has a constraint, abide by it:
 			if curChild.constraint then
 				curBone:validatePosWRTChild( curChild )
+			else
+				-- Just rotate towards the child:
+				local dirToChild = cpml.vec3.normalize( curChildPos - curPos )
+				local r = rotBetweenVecs( cpml.vec3(1,0,0), dirToChild )
+				curBone:setRotFixedChild( r, curChild )
 			end
 			--if not curChild.constraint then	
 				--local dirToChild = cpml.vec3.normalize( curChildPos - curPos )

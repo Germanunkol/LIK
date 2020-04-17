@@ -84,16 +84,15 @@ function Bone:validatePosWRTChild( child )
 		local correctionRot = cpml.quat.from_angle_axis( tAngle-child.constraint.maxAng,
 				child.constraint.axis ) 
 		self:setRotFixedChild( self:getRot()*correctionRot, child )
-		-- Move the bone so that it is facing the child:
 		--self:setPosFixedChild( newPos, child )
 	end
+	
+	-- Move the bone so that it is facing the child:
 	local dir = self:getDir()
 	print(dir)
 	local dist = cpml.vec3.dist( self:getPos(), child:getPos() )
 	local newPos = child:getPos() - dir*dist
 	self:setPosFixedChild( newPos, child )
-	
-	--if tAngle > 
 end
 
 function Bone:validatePosWRTParent( parent, child )
