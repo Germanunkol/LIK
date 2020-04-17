@@ -22,7 +22,6 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 		chain[#chain]:setRot( targetRot, true )
 		-- DEBUG: 2
 		for j=#chain-1,1,-1 do
-			print(j)
 			local curBone = chain[j]
 			local curChild = chain[j+1]
 			local curPos = curBone:getPos()
@@ -55,18 +54,20 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 		end
 
 		-- Backward pass:
-		--[[chain[1]:setPosFixedChild( rootPos, chain[2] )
-		chain[1]:validateRot()
+		chain[1]:setPosFixedChild( rootPos, chain[2] )
+		chain[1]:setLocalRotFixedChild( chain[1].lRot, chain[2] )
 		for j=2,#chain do
-			curBone = chain[j]
-			curParent = chain[j-1]
-			curPos = curBone:getPos()
-			curParentPos = curParent:getPos()
+			print("Bone",j)
+			local curBone = chain[j]
+			local curParent = chain[j-1]
+			local curPos = curBone:getPos()
+			local curParentPos = curParent:getPos()
+			local curChild = chain[j+1]
 
-			curLen = cpml.vec3.len( lPos[curBone] )
-			newPos = cpml.vec3.normalize(curPos - curParentPos)*curLen + curParentPos
+			local curLen = cpml.vec3.len( lPos[curBone] )
+			local newPos = cpml.vec3.normalize(curPos - curParentPos)*curLen + curParentPos
 
-			if j < #chain then
+			if curChild then
 				curBone:setPosFixedChild( newPos, chain[j+1] )
 			else
 				curBone:setPos( newPos )
@@ -74,9 +75,23 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 
 			-- If my parent has a constraint, abide by it:
 			if curParent.constraint then
-				curBone:validatePosWRTParent( curParent, chain[j+1] )
+				curBone:validatePosWRTParent( chain[j+1] )
 			end
-		end]]
+
+			local dirFromParent = cpml.vec3.normalize(
+					curBone:getPos() - curParent:getPos() )
+			print(dirFromParent)
+			local r = rotBetweenVecs( cpml.vec3(1,0,0), dirFromParent )
+			print( cpml.quat.to_angle_axis(r) )
+			curParent:setRotFixedChild( r, curBone )
+
+			-- Ensure the constraints are still valid by rotating myself:
+			if curChild then
+				curBone:setLocalRotFixedChild( curBone.lRot, chain[j+1] )
+			else
+				curBone:setLocalRot( curBone.lRot )
+			end
+		end
 
 	end
 
@@ -94,7 +109,6 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 			b:setRotFixedChild( r, child )
 		end
 	end]]
-
 end
 
 return Fabrik

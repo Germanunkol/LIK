@@ -89,17 +89,21 @@ function Bone:validatePosWRTChild( child )
 	
 	-- Move the bone so that it is facing the child:
 	local dir = self:getDir()
-	print(dir)
 	local dist = cpml.vec3.dist( self:getPos(), child:getPos() )
 	local newPos = child:getPos() - dir*dist
 	self:setPosFixedChild( newPos, child )
 end
 
-function Bone:validatePosWRTParent( parent, child )
+function Bone:validatePosWRTParent( child )
+	if not self.parent then
+		return
+	end
+	assert(self.parent.constraint ~= nil, "Parent must have a constraint for validatePosWRTParent to work!")
 	-- Get rotation between my direction and the child direction:
-	local dir = self:getDir()
+	local parent = self.parent
+	local dir = self:getPos() - parent:getPos()
 	local parentDir = parent:getDir()
-	local rot = rotBetweenVecs( dir, parentDir )
+	local rot = rotBetweenVecs( parentDir, dir )
 	-- Find component which rotates around the constraint axis (twist)
 	swing, twist = swingTwistDecomposition( rot, parent.constraint.axis )
 	-- TODO: "Undo" any swing rotation here
@@ -133,8 +137,6 @@ function Bone:validatePosWRTParent( parent, child )
 			self:setPos( newPos )
 		end
 	end
-	
-	--if tAngle > 
 end
 
 
@@ -158,14 +160,12 @@ function Bone:setLocalRot( r, ignoreConstraint )
 	end
 	self.lRot = r
 end
-function Bone:validateRot()
-	self:setLocalRot( self.lRot )
-end
 
 function Bone:setLocalRotFixedChild( r, child )
 	origChildPos = child:getPos()
 	origChildRot = child:getRot()
-	self.lRot = r 
+	self:setLocalRot( r )
+	--self.lRot = r 
 	child:setPos( origChildPos )
 	child:setRot( origChildRot, true )
 end

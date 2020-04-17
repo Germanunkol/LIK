@@ -18,9 +18,9 @@ function love.load()
 	b1_3 = Bone:new( skel1, b1_2, cpml.vec3(0.2,0,0), cpml.quat(), 0.2 )
 	spine1 = { b1_1, b1_2, b1_3 }
 
-	--b1_1:setConstraint( cpml.vec3(0,0,1), 0, 0 )
-	--b1_2:setConstraint( cpml.vec3(0,0,1), -math.pi*0.05, math.pi*0.05 )
-	--b1_3:setConstraint( cpml.vec3(0,0,1), -math.pi*0.25, math.pi*0.25 )
+	b1_1:setConstraint( cpml.vec3(0,0,1), 0, 0 )
+	b1_2:setConstraint( cpml.vec3(0,0,1), -math.pi*0.05, math.pi*0.05 )
+	b1_3:setConstraint( cpml.vec3(0,0,1), -math.pi*0.25, math.pi*0.25 )
 
 	--[[
 
@@ -144,10 +144,12 @@ function love.update( dt )
 	b3_4:setLocalRot( q2 )
 	b3_5:setLocalRot( q2 )]]
 
-	targetPos = cpml.vec3( math.sin(t*0.25)*0.75, math.cos(t*0.4+1)*0.5, 0 )
+	--targetPos = cpml.vec3( math.sin(t*0.25)*0.75, math.cos(t*0.4+1)*0.5, 0 )
+	targetPos = cpml.vec3( 0.5, 0.5, 0 )
 
 	ang = math.cos(t*0.6)*3 --math.cos(t*0.2)
-	targetDir = cpml.vec3( math.sin(ang), math.cos(ang), 0 )
+	--targetDir = cpml.vec3( math.sin(ang), math.cos(ang), 0 )
+	targetDir = cpml.vec3( 0, -1, 0 )
 	--spine[1]:setPos( cpml.vec3( 0, 0.2, 0 ) )
 	--spine[4]:setPos( targetPos )
 
