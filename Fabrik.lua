@@ -8,6 +8,7 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 	rootPos = chain[1]:getPos()
 
 	debugSteps = debugSteps or math.huge
+	maxIterations = 1
 
 	for i=1,maxIterations do
 		
@@ -21,6 +22,7 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 		chain[#chain]:setRot( targetRot, true )
 		-- DEBUG: 2
 		for j=#chain-1,1,-1 do
+			print(j)
 			local curBone = chain[j]
 			local curChild = chain[j+1]
 			local curPos = curBone:getPos()
@@ -42,14 +44,15 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 				--curBone:setRotFixedChild( r, curChild )
 			-- If I do have a constraint, ensure my position is valid (if child is fixed)
 			--else
-				curBone:validatePosWRTChild( curChild )
+				--curBone:validatePosWRTChild( curChild )
 			--end
+
 		end
 
 		-- Backward pass:
-		--chain[1]:setPos( rootPos )
-		--chain[1]:validateRot()
-		--[[for j=2,#chain do
+		--[[chain[1]:setPosFixedChild( rootPos, chain[2] )
+		chain[1]:validateRot()
+		for j=2,#chain do
 			curBone = chain[j]
 			curParent = chain[j-1]
 			curPos = curBone:getPos()

@@ -63,7 +63,6 @@ function Bone:validatePosWRTChild( child )
 	local rot = rotBetweenVecs( dir, childDir )
 	-- Find component which rotates around the constraint axis (twist)
 	swing, twist = swingTwistDecomposition( rot, child.constraint.axis )
-	print(swing)
 	-- TODO: "Undo" any swing rotation here
 	tAngle, tAxis = cpml.quat.to_angle_axis( twist )
 	if cpml.vec3.dist2( tAxis, child.constraint.axis ) > 0.5 then
@@ -71,21 +70,29 @@ function Bone:validatePosWRTChild( child )
 		tAngle = -tAngle
 	end
 	if tAngle < child.constraint.minAng then
+		--print(tAngle, "min")
 		local correctionRot = cpml.quat.from_angle_axis( tAngle-child.constraint.minAng,
 				child.constraint.axis ) 
 		self:setRotFixedChild( self:getRot()*correctionRot, child )
+		-- Move the bone so that it is facing the child:
+		--local dir = self:getDir()
+		--local dist = cpml.vec3.dist( self:getPos(), child:getPos() )
+		--local newPos = child:getPos() - dir*dist
+		--self:setPosFixedChild( newPos, child )
 	elseif tAngle > child.constraint.maxAng then
+		--print(tAngle, "max")
 		local correctionRot = cpml.quat.from_angle_axis( tAngle-child.constraint.maxAng,
 				child.constraint.axis ) 
 		self:setRotFixedChild( self:getRot()*correctionRot, child )
+		-- Move the bone so that it is facing the child:
+		--self:setPosFixedChild( newPos, child )
 	end
-	-- Move the bone so that it is facing the child:
 	local dir = self:getDir()
+	print(dir)
 	local dist = cpml.vec3.dist( self:getPos(), child:getPos() )
 	local newPos = child:getPos() - dir*dist
 	self:setPosFixedChild( newPos, child )
 	
-	print(tAngle)
 	--if tAngle > 
 end
 
@@ -96,7 +103,6 @@ function Bone:validatePosWRTParent( parent, child )
 	local rot = rotBetweenVecs( dir, parentDir )
 	-- Find component which rotates around the constraint axis (twist)
 	swing, twist = swingTwistDecomposition( rot, parent.constraint.axis )
-	print(swing)
 	-- TODO: "Undo" any swing rotation here
 	tAngle, tAxis = cpml.quat.to_angle_axis( twist )
 	if cpml.vec3.dist2( tAxis, parent.constraint.axis ) > 0.5 then
@@ -129,7 +135,6 @@ function Bone:validatePosWRTParent( parent, child )
 		end
 	end
 	
-	print(tAngle)
 	--if tAngle > 
 end
 
