@@ -101,22 +101,28 @@ function Bone:validatePosWRTParent( child )
 	assert(self.parent.constraint ~= nil, "Parent must have a constraint for validatePosWRTParent to work!")
 	-- Get rotation between my direction and the child direction:
 	local parent = self.parent
-	local dir = self:getPos() - parent:getPos()
-	local parentDir = parent:getDir()
+	local dir = cpml.vec3.normalize( self:getPos() - parent:getPos() )
+	local parentDir = parent:getBaseDir()
 	local rot = rotBetweenVecs( parentDir, dir )
 	-- Find component which rotates around the constraint axis (twist)
 	swing, twist = swingTwistDecomposition( rot, parent.constraint.axis )
 	-- TODO: "Undo" any swing rotation here
 	tAngle, tAxis = cpml.quat.to_angle_axis( twist )
+	print("parentDir", parentDir)
+	print("dir", dir)
+	print("tAngle", tAngle)
+	print("constraint", parent.constraint.minAng, parent.constraint.maxAng)
 	if cpml.vec3.dist2( tAxis, parent.constraint.axis ) > 0.5 then
 		tAxis = -tAxis
 		tAngle = -tAngle
 	end
+	print("tAngle mirrored", tAngle)
 	if tAngle < parent.constraint.minAng then
+		print("min", parent.constraint.minAng)
 		-- Project myself into the constraint bounds:
 		local minRot = cpml.quat.from_angle_axis( parent.constraint.minAng,
 				parent.constraint.axis )
-		local minDir = cpml.vec3.normalize( cpml.quat.mul_vec3( minRot, parent:getDir() ) )
+		local minDir = cpml.vec3.normalize( cpml.quat.mul_vec3( minRot, parent:getBaseDir() ) )
 		local dist = cpml.vec3.dist( parent:getPos(), self:getPos() )
 		local newPos = parent:getPos() + minDir*dist
 		if child then
@@ -125,10 +131,11 @@ function Bone:validatePosWRTParent( child )
 			self:setPos( newPos )
 		end
 	elseif tAngle > parent.constraint.maxAng then
+		print("max", parent.constraint.maxAng)
 		-- Project myself into the constraint bounds:
 		local maxRot = cpml.quat.from_angle_axis( parent.constraint.maxAng,
 				parent.constraint.axis )
-		local maxDir = cpml.vec3.normalize( cpml.quat.mul_vec3( maxRot, parent:getDir() ) )
+		local maxDir = cpml.vec3.normalize( cpml.quat.mul_vec3( maxRot, parent:getBaseDir() ) )
 		local dist = cpml.vec3.dist( parent:getPos(), self:getPos() )
 		local newPos = parent:getPos() + maxDir*dist
 		if child then
@@ -227,10 +234,21 @@ function Bone:projectToConstraintPlane( pos )
 	return projection
 end
 
+-- Get vec pointing in the direction I'm currently facing
 function Bone:getDir()
 	local rot = self:getRot()
 	return cpml.quat.mul_vec3( rot, cpml.vec3(1,0,0) )
 end
+-- Get vec pointing in the direction I would be facing if I had no (local) rotation.
+function Bone:getBaseDir()
+	if self.parent then
+		local rot = self.parent:getRot()
+		return cpml.quat.mul_vec3( rot, cpml.vec3(1,0,0) )
+	else
+		return cpml.vec3(1,0,0)
+	end
+end
+
 function Bone:getParentDir()
 	if self.parent then
 		local rot = self.parent:getRot()

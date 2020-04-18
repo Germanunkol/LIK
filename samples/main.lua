@@ -8,19 +8,47 @@ local Fabrik = require("Fabrik")
 local class = require("lib.middleclass.middleclass")
 local cpml = require("lib.cpml")
 
-function love.load()
-	vZero = cpml.vec3(0,0,0)
+function createShortChain()
+	local vZero = cpml.vec3(0,0,0)
+	local skel = Skeleton:new()
 
-	skel1 = Skeleton:new()
+	local b1_1 = Bone:new( skel, nil, vZero, cpml.quat(), 0.2 )
+	local b1_2 = Bone:new( skel, b1_1, cpml.vec3(0.2,0,0), cpml.quat(), 0.2 )
+	local b1_3 = Bone:new( skel, b1_2, cpml.vec3(0.2,0,0), cpml.quat(), 0.2 )
 
-	b1_1 = Bone:new( skel1, nil, vZero, cpml.quat(), 0.2 )
-	b1_2 = Bone:new( skel1, b1_1, cpml.vec3(0.2,0,0), cpml.quat(), 0.2 )
-	b1_3 = Bone:new( skel1, b1_2, cpml.vec3(0.2,0,0), cpml.quat(), 0.2 )
-	spine1 = { b1_1, b1_2, b1_3 }
+	spine = { b1_1, b1_2, b1_3 }
 
-	b1_1:setConstraint( cpml.vec3(0,0,1), 0, 0 )
-	b1_2:setConstraint( cpml.vec3(0,0,1), -math.pi*0.05, math.pi*0.05 )
+	b1_1:setConstraint( cpml.vec3(0,0,1), 0, math.pi*0.5 )
+	b1_2:setConstraint( cpml.vec3(0,0,1), -math.pi*0.25, math.pi*0 )
 	b1_3:setConstraint( cpml.vec3(0,0,1), -math.pi*0.25, math.pi*0.25 )
+	return skel, spine
+end
+
+function createLongChain()
+	local vZero = cpml.vec3(0,0,0)
+	local skel = Skeleton:new()
+	spine = {}
+
+	local segLen = 0.05
+	local b = Bone:new( skel, nil, vZero, cpml.quat(), segLen )
+	table.insert(spine, b)
+
+	for i=1,15 do
+		b = Bone:new( skel, b, cpml.vec3(segLen,0,0), cpml.quat(), segLen )
+		if i > 2 and i < 10 then
+			b:setConstraint( cpml.vec3(0,0,1), -math.pi*0.01, math.pi*0.01 )
+		end
+		table.insert(spine, b)
+	end
+
+	return skel, spine
+end
+
+
+function love.load()
+
+	--skel1, spine1 = createLongChain()
+	skel1, spine1 = createShortChain()
 
 	--[[
 
@@ -144,22 +172,26 @@ function love.update( dt )
 	b3_4:setLocalRot( q2 )
 	b3_5:setLocalRot( q2 )]]
 
-	--targetPos = cpml.vec3( math.sin(t*0.25)*0.75, math.cos(t*0.4+1)*0.5, 0 )
-	targetPos = cpml.vec3( 0.5, 0.5, 0 )
+	targetPos = cpml.vec3( math.sin(t)*0.4, 0.5, 0 )
 
-	ang = math.cos(t*0.6)*3 --math.cos(t*0.2)
-	--targetDir = cpml.vec3( math.sin(ang), math.cos(ang), 0 )
-	targetDir = cpml.vec3( 0, -1, 0 )
+	--targetPos = cpml.vec3( 0.5, -0.5, 0 )
+
+	circ = (math.cos(t)+1)*0.5
+	ang = circ*0.25 + math.pi*0.3
+	targetPos = targetPos + cpml.vec3( 0, -circ*0.2, 0 )
+
+	targetDir = cpml.vec3( math.sin(ang), math.cos(ang), 0 )
+	--targetDir = cpml.vec3( 0, -1, 0 )
 	--spine[1]:setPos( cpml.vec3( 0, 0.2, 0 ) )
 	--spine[4]:setPos( targetPos )
-
+	
 	--moveCreature()
-	--Fabrik.solve( spine1, targetPos, targetDir, 20 )
+	--Fabrik.solve( spine1, targetPos, targetDir, 2 )
 end
 
 function love.keypressed( key )
 	if key == "space" then
-		Fabrik.solve( spine1, targetPos, targetDir, 20 )
+		Fabrik.solve( spine1, targetPos, targetDir, 2 )
 		--prevTargetPos = targetPos
 	end
 end

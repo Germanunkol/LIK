@@ -8,7 +8,7 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 	rootPos = chain[1]:getPos()
 
 	debugSteps = debugSteps or math.huge
-	maxIterations = 1
+	--maxIterations = 1
 
 	for i=1,maxIterations do
 		
@@ -18,8 +18,15 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 			lPos[b] = b.lPos
 		end
 		chain[#chain]:setPos( targetPos )
-		targetRot = rotBetweenVecs( cpml.vec3(1,0,0), targetDir )
-		chain[#chain]:setRot( targetRot, true )
+		if targetDir then
+			targetRot = rotBetweenVecs( cpml.vec3(1,0,0), targetDir )
+			chain[#chain]:setRot( targetRot, true )
+		else
+		-- Just rotate towards the child:
+			local dirFromParent = cpml.vec3.normalize( targetPos - chain[#chain-1]:getPos() )
+			local r = rotBetweenVecs( cpml.vec3(1,0,0), dirFromParent )
+			chain[#chain]:setRot( r )
+		end
 		-- DEBUG: 2
 		for j=#chain-1,1,-1 do
 			local curBone = chain[j]
@@ -57,7 +64,6 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 		chain[1]:setPosFixedChild( rootPos, chain[2] )
 		chain[1]:setLocalRotFixedChild( chain[1].lRot, chain[2] )
 		for j=2,#chain do
-			print("Bone",j)
 			local curBone = chain[j]
 			local curParent = chain[j-1]
 			local curPos = curBone:getPos()
@@ -73,24 +79,27 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 				curBone:setPos( newPos )
 			end
 
-			-- If my parent has a constraint, abide by it:
-			if curParent.constraint then
-				curBone:validatePosWRTParent( chain[j+1] )
-			end
+			--if i == 1 or j == 2 then
+				-- If my parent has a constraint, abide by it:
+				if curParent.constraint then
+					print("j", j)
+					curBone:validatePosWRTParent( chain[j+1] )
+					print("j", j)
+				end
+				--if i == 1 then
 
-			local dirFromParent = cpml.vec3.normalize(
-					curBone:getPos() - curParent:getPos() )
-			print(dirFromParent)
-			local r = rotBetweenVecs( cpml.vec3(1,0,0), dirFromParent )
-			print( cpml.quat.to_angle_axis(r) )
-			curParent:setRotFixedChild( r, curBone )
+				local dirFromParent = cpml.vec3.normalize(
+				curBone:getPos() - curParent:getPos() )
+				local r = rotBetweenVecs( cpml.vec3(1,0,0), dirFromParent )
+				curParent:setRotFixedChild( r, curBone )
 
-			-- Ensure the constraints are still valid by rotating myself:
-			if curChild then
-				curBone:setLocalRotFixedChild( curBone.lRot, chain[j+1] )
-			else
-				curBone:setLocalRot( curBone.lRot )
-			end
+				-- Ensure the constraints are still valid by rotating myself:
+				if curChild then
+					curBone:setLocalRotFixedChild( curBone.lRot, chain[j+1] )
+				else
+					curBone:setLocalRot( curBone.lRot )
+				end
+			--end
 		end
 
 	end
