@@ -14,13 +14,17 @@ function createShortChain()
 
 	local b1_1 = Bone:new( skel, nil, vZero, cpml.quat(), 0.2 )
 	local b1_2 = Bone:new( skel, b1_1, cpml.vec3(0.2,0,0), cpml.quat(), 0.2 )
-	local b1_3 = Bone:new( skel, b1_2, cpml.vec3(0.2,0,0), cpml.quat(), 0.2 )
+	local b1_3 = Bone:new( skel, b1_2, cpml.vec3(0.2,0,0), cpml.quat(), 0.07 )
+	local b1_4 = Bone:new( skel, b1_3, cpml.vec3(0.07,0,0), cpml.quat(), 0.03 )
 
-	spine = { b1_1, b1_2, b1_3 }
+	spine = { b1_1, b1_2, b1_3, b1_4 }
 
-	--b1_1:setConstraint( cpml.vec3(0,0,1), 0, math.pi*0.5 )
-	--b1_2:setConstraint( cpml.vec3(0,0,1), -math.pi*0.25, math.pi*0 )
+	--b1_1:setConstraint( cpml.vec3(0,0,1), -math.pi*0.5, math.pi*0.5 )
+	b1_1:setConstraint( cpml.vec3(0,0,1), math.pi*0.4, math.pi*0.9 )
+	b1_2:setConstraint( cpml.vec3(0,0,1), -math.pi*0.5, -math.pi*0.1 )
+	b1_3:setConstraint( cpml.vec3(0,0,1), -math.pi*0.5, -math.pi*0.1 )
 	--b1_3:setConstraint( cpml.vec3(0,0,1), -math.pi*0.25, math.pi*0.25 )
+	b1_4:setConstraint( cpml.vec3(0,0,1), -math.pi*0.5, math.pi*0.2 )
 	return skel, spine
 end
 
@@ -37,7 +41,7 @@ function createLongChain()
 	for i=1,15 do
 		b = Bone:new( skel, b, cpml.vec3(segLen,0,0), cpml.quat(), segLen )
 		--if i < 10 then
-			--b:setConstraint( cpml.vec3(0,0,1), -math.pi*0.3, 0 )
+			b:setConstraint( cpml.vec3(0,0,1), -math.pi*0.3, math.pi*0.3 )
 		--end
 		table.insert(spine, b)
 	end
@@ -48,8 +52,8 @@ end
 
 function love.load()
 
-	skel1, spine1 = createLongChain()
-	--skel1, spine1 = createShortChain()
+	--skel1, spine1 = createLongChain()
+	skel1, spine1 = createShortChain()
 
 	--[[
 
@@ -149,15 +153,31 @@ function love.draw()
 	--drawSkel( skel, 0, 0 )
 	drawSkel( skel1 )
 	love.graphics.setColor( 0.4,0.5,1,1 )
-	love.graphics.circle( "fill", targetPos.x, targetPos.y, 0.02 )
+	--love.graphics.circle( "fill", targetPos.x, targetPos.y, 0.02 )
 	local endPoint = targetPos + targetDir*0.05
-	love.graphics.line( targetPos.x, targetPos.y, endPoint.x, endPoint.y )
+	--love.graphics.line( targetPos.x, targetPos.y, endPoint.x, endPoint.y )
 	love.graphics.setColor( 0.3,1,0.3,1 )
-	love.graphics.circle( "fill", prevTargetPos.x, prevTargetPos.y, 0.02 )
+	--love.graphics.circle( "fill", prevTargetPos.x, prevTargetPos.y, 0.02 )
+	
+	-- Draw the floor:
+	love.graphics.setColor( 0.8, 0.8, 1, 0.5 )
+	floor = {}
+	for x=-1,1,0.05 do
+		pos = getFloorPos( t, x )
+		table.insert( floor, x )
+		table.insert( floor, pos.y )
+	end
+	love.graphics.line( floor )
 	love.graphics.pop()
 
 	love.graphics.setColor(1,1,1,1)
 	love.graphics.print("FPS: "..tostring(love.timer.getFPS( )), 10, 10)
+end
+
+function getFloorPos( t, x )
+	local p = cpml.vec3( 0, 0.35, 0 )
+	p = p + cpml.vec3( 0, 0.05*math.cos(t*0.3+x*0.3), 0 )
+	return p
 end
 
 function love.update( dt )
@@ -189,29 +209,40 @@ function love.update( dt )
 	b3_4:setLocalRot( q2 )
 	b3_5:setLocalRot( q2 )]]
 
-	targetPos = cpml.vec3( math.sin(t)*0.4, 0.5, 0 )
+	--floorPos = cpml.vec3( 0, 0.4, 0 )
+	--floorPos = floorPos + cpml.vec3( 0, 0.1*math.cos(t*0.1), 0 )
+	floorPos = getFloorPos( t, 0 )
 
 	--targetPos = cpml.vec3( 0.5, -0.5, 0 )
+	cycleLen = 4
+	cycle = t - math.floor( t/cycleLen )
+	cycleNorm = t/cycleLen
+	ang = math.pi*2*cycleNorm
 
-	circ = (math.cos(t)+1)*0.5
-	ang = circ*0.25 + math.pi*0.3
-	targetPos = targetPos + cpml.vec3( 0, -circ*0.2, 0 )
+	raise = 0.1
+	len = 0.2
+
+	targetPos = floorPos + cpml.vec3( len*math.cos( ang ),
+			math.min(raise*math.sin( ang ),0), 0 )
+	
+	footAng = pos
 
 	--targetPos = cpml.vec3( math.cos(t)*0.5, math.cos(t*1.3+1)*0.35, 0 )
 
-	targetDir = cpml.vec3( math.sin(ang), math.cos(ang), 0 )
+	targetDir = cpml.vec3( 1,0,0 )
 	--targetDir = cpml.vec3( 0, -1, 0 )
 	--spine[1]:setPos( cpml.vec3( 0, 0.2, 0 ) )
 	--spine[4]:setPos( targetPos )
 	
 	--moveCreature()
-	skel1.pos = cpml.vec3( math.sin(t)*0.15, math.cos(t)*0.1, 0 )
-	skel1.rot = cpml.quat.from_angle_axis( t*0.9, cpml.vec3( 0,0,1 ) )
+	skel1.pos = cpml.vec3( math.sin(-ang)*raise*2, math.cos(-ang)*raise*0.5, 0 )
+	--skel1.rot = cpml.quat.from_angle_axis( ang, cpml.vec3( 0,0,1 ) )
 	--print( skel1:toGlobalPos( cpml.vec3( 1, 0, 0 ) ) )
 	--print(skel1.pos)
 	targetPosLocal = skel1:toLocalPos( targetPos )
 	targetDirLocal = skel1:toLocalDir( targetDir )
-	Fabrik.solve( spine1, targetPosLocal, targetDirLocal, 1 )
+	--Fabrik.solve( spine1, targetPosLocal, targetDirLocal, 5 )
+	Fabrik.solve( spine1, targetPosLocal, nil, 5 )
 	--Fabrik.solve( spine1, targetPos, targetDir, 3 )
 end
 
