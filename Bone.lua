@@ -285,7 +285,7 @@ function Bone:getDebugData()
 	local pO0 = self:toGlobalPos( cpml.vec3( len*0.05, len*w, 0 ) )
 	local pO1 = self:toGlobalPos( cpml.vec3( len*0.05, -len*w, 0 ) )
 
-	-- Insert a triangle:
+	-- Insert a quad:
 	local d = { col={0.25,0.25,0.5, 0.9},
 		drawType="quad",
 		points = {pS,pO0,pE,pO1},
@@ -297,7 +297,7 @@ function Bone:getDebugData()
 		drawType="line",
 		points = {pS,pE},
 	}
-	table.insert( data, d )
+	--table.insert( data, d )
 
 	-- Draw constraint, if any:
 	if self.constraint then

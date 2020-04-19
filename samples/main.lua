@@ -12,19 +12,20 @@ function createShortChain()
 	local vZero = cpml.vec3(0,0,0)
 	local skel = Skeleton:new()
 
-	local b1_1 = Bone:new( skel, nil, vZero, cpml.quat(), 0.2 )
+	local b1_0 = Bone:new( skel, nil, vZero, cpml.quat(), 0.1 )
+	local b1_1 = Bone:new( skel, b1_0, cpml.vec3(0.1,0,0), cpml.quat(), 0.2 )
 	local b1_2 = Bone:new( skel, b1_1, cpml.vec3(0.2,0,0), cpml.quat(), 0.2 )
 	local b1_3 = Bone:new( skel, b1_2, cpml.vec3(0.2,0,0), cpml.quat(), 0.07 )
 	local b1_4 = Bone:new( skel, b1_3, cpml.vec3(0.07,0,0), cpml.quat(), 0.03 )
 
-	spine = { b1_1, b1_2, b1_3, b1_4 }
+	spine = { b1_0, b1_1, b1_2, b1_3, b1_4 }
 
 	--b1_1:setConstraint( cpml.vec3(0,0,1), -math.pi*0.5, math.pi*0.5 )
-	b1_1:setConstraint( cpml.vec3(0,0,1), math.pi*0.4, math.pi*0.9 )
-	b1_2:setConstraint( cpml.vec3(0,0,1), -math.pi*0.5, -math.pi*0.1 )
-	b1_3:setConstraint( cpml.vec3(0,0,1), -math.pi*0.5, -math.pi*0.1 )
-	--b1_3:setConstraint( cpml.vec3(0,0,1), -math.pi*0.25, math.pi*0.25 )
-	b1_4:setConstraint( cpml.vec3(0,0,1), -math.pi*0.5, math.pi*0.2 )
+	b1_0:setConstraint( cpml.vec3(0,0,1), -math.pi, -math.pi )
+	b1_1:setConstraint( cpml.vec3(0,0,1), -math.pi*0.9, math.pi*0.1 )
+	b1_2:setConstraint( cpml.vec3(0,0,1), -math.pi, -math.pi*0.1 )
+	b1_3:setConstraint( cpml.vec3(0,0,1), -math.pi*0.5, 0 )
+	b1_4:setConstraint( cpml.vec3(0,0,1), -math.pi*0.5, 0 )
 	return skel, spine
 end
 
@@ -211,7 +212,6 @@ function love.update( dt )
 
 	--floorPos = cpml.vec3( 0, 0.4, 0 )
 	--floorPos = floorPos + cpml.vec3( 0, 0.1*math.cos(t*0.1), 0 )
-	floorPos = getFloorPos( t, 0 )
 
 	--targetPos = cpml.vec3( 0.5, -0.5, 0 )
 	cycleLen = 4
@@ -222,8 +222,10 @@ function love.update( dt )
 	raise = 0.1
 	len = 0.2
 
-	targetPos = floorPos + cpml.vec3( len*math.cos( ang ),
-			math.min(raise*math.sin( ang ),0), 0 )
+	x = len*math.cos( ang )
+	floorPos = getFloorPos( t, x )
+
+	targetPos = floorPos + cpml.vec3( x, math.min(raise*math.sin( ang ),0), 0 )
 	
 	footAng = pos
 
@@ -241,8 +243,14 @@ function love.update( dt )
 	--print(skel1.pos)
 	targetPosLocal = skel1:toLocalPos( targetPos )
 	targetDirLocal = skel1:toLocalDir( targetDir )
+	--targetPosLocal = cpml.vec3(-0.230,0.239,0.000)
 	--Fabrik.solve( spine1, targetPosLocal, targetDirLocal, 5 )
-	Fabrik.solve( spine1, targetPosLocal, nil, 5 )
+	print(targetPosLocal, targetDirLocal )
+	Fabrik.solve( spine1, targetPosLocal, targetDirLocal, 20 )
+	if Fabrik.validateChain( spine1 ) ~= true then
+		love.graphics.captureScreenshot( "debug.png" )
+		love.event.quit()
+	end
 	--Fabrik.solve( spine1, targetPos, targetDir, 3 )
 end
 

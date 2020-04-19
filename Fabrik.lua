@@ -116,4 +116,34 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 	end]]
 end
 
+function Fabrik.validateChain( chain )
+	local valid = true
+	local eps = math.pi*0.01
+	for i, bone in ipairs(chain) do
+		-- Check that bone is within bounds with respect to parent:
+		if bone.constraint then
+			--if bone.parent then
+			--else
+			local ang, axis = cpml.quat.to_angle_axis( bone.lRot )
+			ang = angleRange(ang)
+			if cpml.vec3.dist2( axis, bone.constraint.axis ) > 0.5 then
+				axis = -axis
+				ang = -ang
+			end
+				if ang < bone.constraint.minAng - eps then
+					print( "Bone ".. i .. "(" .. ang .. ") lower than min angle (" ..
+
+						bone.constraint.minAng .. ")!" )
+					valid = false
+				elseif ang > bone.constraint.maxAng + eps then
+					print( "Bone", i, "(" .. ang .. ") higher than max angle (" ..
+						bone.constraint.maxAng .. ")!" )
+					valid = false
+				end
+			--end
+		end
+	end
+	return valid
+end
+
 return Fabrik
