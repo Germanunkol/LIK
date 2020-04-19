@@ -79,27 +79,23 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 				curBone:setPos( newPos )
 			end
 
-			--if i == 1 or j == 2 then
-				-- If my parent has a constraint, abide by it:
-				if curParent.constraint then
-					print("j", j)
-					curBone:validatePosWRTParent( chain[j+1] )
-					print("j", j)
-				end
-				--if i == 1 then
+			-- If my parent has a constraint, abide by it:
+			if curParent.constraint then
+				curBone:validatePosWRTParent( chain[j+1] )
+			end
+			--if i == 1 then
 
-				local dirFromParent = cpml.vec3.normalize(
-				curBone:getPos() - curParent:getPos() )
-				local r = rotBetweenVecs( cpml.vec3(1,0,0), dirFromParent )
-				curParent:setRotFixedChild( r, curBone )
+			local dirFromParent = cpml.vec3.normalize(
+					curBone:getPos() - curParent:getPos() )
+			local r = rotBetweenVecs( cpml.vec3(1,0,0), dirFromParent )
+			curParent:setRotFixedChild( r, curBone )
 
-				-- Ensure the constraints are still valid by rotating myself:
-				if curChild then
-					curBone:setLocalRotFixedChild( curBone.lRot, chain[j+1] )
-				else
-					curBone:setLocalRot( curBone.lRot )
-				end
-			--end
+			-- Ensure the constraints are still valid by rotating myself:
+			if curChild then
+				curBone:setLocalRotFixedChild( curBone.lRot, chain[j+1] )
+			else
+				curBone:setLocalRot( curBone.lRot )
+			end
 		end
 
 	end

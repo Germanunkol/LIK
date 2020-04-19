@@ -1,6 +1,7 @@
 local class = require("lib/middleclass/middleclass")
 local cpml = require("lib.cpml")
 local util = require("util")
+local Skeleton = require("Skeleton")
 
 local Bone = class("Bone")
 
@@ -27,6 +28,7 @@ function Bone:setPos( p )
 		lp = self.parent:toLocalPos( p )
 		self:setLocalPos( lp )
 	else
+		--lp = self.skeleton:toLocalPos( p )
 		self:setLocalPos( p )
 	end
 end
@@ -108,17 +110,11 @@ function Bone:validatePosWRTParent( child )
 	swing, twist = swingTwistDecomposition( rot, parent.constraint.axis )
 	-- TODO: "Undo" any swing rotation here
 	tAngle, tAxis = cpml.quat.to_angle_axis( twist )
-	print("parentDir", parentDir)
-	print("dir", dir)
-	print("tAngle", tAngle)
-	print("constraint", parent.constraint.minAng, parent.constraint.maxAng)
 	if cpml.vec3.dist2( tAxis, parent.constraint.axis ) > 0.5 then
 		tAxis = -tAxis
 		tAngle = -tAngle
 	end
-	print("tAngle mirrored", tAngle)
 	if tAngle < parent.constraint.minAng then
-		print("min", parent.constraint.minAng)
 		-- Project myself into the constraint bounds:
 		local minRot = cpml.quat.from_angle_axis( parent.constraint.minAng,
 				parent.constraint.axis )
@@ -131,7 +127,6 @@ function Bone:validatePosWRTParent( child )
 			self:setPos( newPos )
 		end
 	elseif tAngle > parent.constraint.maxAng then
-		print("max", parent.constraint.maxAng)
 		-- Project myself into the constraint bounds:
 		local maxRot = cpml.quat.from_angle_axis( parent.constraint.maxAng,
 				parent.constraint.axis )
@@ -184,6 +179,8 @@ function Bone:getPos()
 		--r = self.lRot*pRot
 		self.pos = pPos + cpml.quat.mul_vec3( pRot, self.lPos )
 	else
+		--self.pos = self.skeleton:toGlobalPos( self.lPos )
+		--self.pos = self.skeleton.pos + self.lPos
 		self.pos = self.lPos
 	end
 	return self.pos
@@ -196,18 +193,22 @@ function Bone:getRot()
 		local pRot = self.parent:getRot()
 		self.rot = self.lRot*pRot
 	else
+		--local sRot = self.skeleton.rot
+		--self.rot = self.lRot*sRot
 		self.rot = self.lRot
 	end
 	return self.rot
 end
 function Bone:setRot( r, ignoreConstraint )
 	if self.parent then
-		local pRot = self.parent:getRot( true )
-
+		local pRot = self.parent:getRot()
 		local lRot = r*cpml.quat.inverse( pRot )
 		self:setLocalRot( lRot, ignoreConstraint )
 	else
-		self:setLocalRot( r, ignoreConstraint )
+		--local sRot = self.skeleton.rot
+		--local lRot = r*cpml.quat.inverse( sRot )
+		--self:setLocalRot( lRot, ignoreConstraint )
+		self:setLocalRot( r )
 	end
 end
 function Bone:toGlobalPos( pos )
@@ -286,19 +287,15 @@ function Bone:getDebugData()
 
 	-- Insert a triangle:
 	local d = { col={0.25,0.25,0.5, 0.9},
-		drawType="tri",
-		p0=pS,
-		p1=pO0,
-		p2=pE,
-		p3=pO1,
+		drawType="quad",
+		points = {pS,pO0,pE,pO1},
 	}
 	table.insert( data, d )
 
 	-- Insert a line:
 	local d = { col={0.9,0.9,0.9, 0.9},
 		drawType="line",
-		p0=pS,
-		p1=pE
+		points = {pS,pE},
 	}
 	table.insert( data, d )
 
@@ -328,14 +325,12 @@ function Bone:getDebugData()
 		
 		local d = { col={0.9,0.2,0.2,0.9},
 			drawType="line",
-			p0=pS,
-			p1=pMin
+			points = {pS,pMin},
 		}
 		table.insert( data, d )
 		local d = { col={0.9,0.2,0.2,0.9},
 			drawType="line",
-			p0=pS,
-			p1=pMax
+			points = {pS,pMax},
 		}
 		table.insert( data, d )
 	end
@@ -346,8 +341,7 @@ function Bone:getDebugData()
 		-- Insert a line:
 		local d = { col={0.9,0.9,0.9, 0.3},
 			drawType="line",
-			p0=parentS,
-			p1=myS
+			points = {parentS,myS},
 		}
 		table.insert( data, d )
 	end
@@ -357,18 +351,19 @@ end
 
 function test()
 	print("Testing Bone functions")
+	local skel = Skeleton:new()
 	math.randomseed(123)
 	local pos = cpml.vec3(math.random(), math.random(), math.random())
 	local rot = cpml.quat.from_angle_axis( math.random(), cpml.vec3(0,0,1) )
-	local b1 = Bone:new( nil, nil, pos, rot, math.random() )
+	local b1 = Bone:new( skel, nil, pos, rot, math.random() )
 
 	local pos = cpml.vec3(math.random(), math.random(), math.random())
 	local rot = cpml.quat.from_angle_axis( math.random(), cpml.vec3(0,0,1) )
-	local b2 = Bone:new( nil, b1, pos, rot, math.random() )
+	local b2 = Bone:new( skel, b1, pos, rot, math.random() )
 
 	local pos = cpml.vec3(math.random(), math.random(), math.random())
 	local rot = cpml.quat.from_angle_axis( math.random(), cpml.vec3(0,0,1) )
-	local b3 = Bone:new( nil, b2, pos, rot, math.random() )
+	local b3 = Bone:new( skel, b2, pos, rot, math.random() )
 
 	print("Testing Bone 1:")
 	local globalPos = cpml.vec3(math.random(), math.random(), math.random())

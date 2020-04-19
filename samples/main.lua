@@ -18,9 +18,9 @@ function createShortChain()
 
 	spine = { b1_1, b1_2, b1_3 }
 
-	b1_1:setConstraint( cpml.vec3(0,0,1), 0, math.pi*0.5 )
-	b1_2:setConstraint( cpml.vec3(0,0,1), -math.pi*0.25, math.pi*0 )
-	b1_3:setConstraint( cpml.vec3(0,0,1), -math.pi*0.25, math.pi*0.25 )
+	--b1_1:setConstraint( cpml.vec3(0,0,1), 0, math.pi*0.5 )
+	--b1_2:setConstraint( cpml.vec3(0,0,1), -math.pi*0.25, math.pi*0 )
+	--b1_3:setConstraint( cpml.vec3(0,0,1), -math.pi*0.25, math.pi*0.25 )
 	return skel, spine
 end
 
@@ -31,13 +31,14 @@ function createLongChain()
 
 	local segLen = 0.05
 	local b = Bone:new( skel, nil, vZero, cpml.quat(), segLen )
+	b:setConstraint( cpml.vec3(0,0,1), 0.5*math.pi, 0.5*math.pi )
 	table.insert(spine, b)
 
 	for i=1,15 do
 		b = Bone:new( skel, b, cpml.vec3(segLen,0,0), cpml.quat(), segLen )
-		if i > 2 and i < 10 then
-			b:setConstraint( cpml.vec3(0,0,1), -math.pi*0.01, math.pi*0.01 )
-		end
+		--if i < 10 then
+			--b:setConstraint( cpml.vec3(0,0,1), -math.pi*0.3, 0 )
+		--end
 		table.insert(spine, b)
 	end
 
@@ -47,8 +48,8 @@ end
 
 function love.load()
 
-	--skel1, spine1 = createLongChain()
-	skel1, spine1 = createShortChain()
+	skel1, spine1 = createLongChain()
+	--skel1, spine1 = createShortChain()
 
 	--[[
 
@@ -89,26 +90,37 @@ function love.load()
 	prevTargetPos = cpml.vec3()
 end
 
-function drawSkel( skel, x, y )
+function drawSkel( skel )
 	data = skel:getDebugData()
 
 	love.graphics.push()
-	love.graphics.translate( x, y )
+	love.graphics.translate( skel.pos.x, skel.pos.y )
+	local ang,axis = cpml.quat.to_angle_axis( skel.rot )
+	if axis.z < 0 then
+		axis = -axis
+		ang = -ang
+	end
+	--print(skel.pos.x, skel.pos.y)
+	love.graphics.rotate( ang )
 	--love.graphics.scale( scale )
 	love.graphics.setLineWidth( 1/200 )
 	for i,d in ipairs(data) do
 		love.graphics.setColor( d.col )
 		if d.drawType == "line" then
-			love.graphics.line( d.p0.x, d.p0.y, d.p1.x, d.p1.y )
-		elseif d.drawType == "tri" then
+			p = d.points
+			love.graphics.line( p[1].x, p[1].y, p[2].x, p[2].y )
+		elseif d.drawType == "quad" then
+			p = d.points
 			love.graphics.polygon( "fill",
-				d.p0.x, d.p0.y,
-				d.p1.x, d.p1.y,
-				d.p2.x, d.p2.y,
-				d.p3.x, d.p3.y )
+				p[1].x, p[1].y,
+				p[2].x, p[2].y,
+				p[3].x, p[3].y,
+				p[4].x, p[4].y )
+
 		end
 	end
 	love.graphics.pop()
+
 end
 
 function drawGrid()
@@ -128,19 +140,24 @@ function love.draw()
 	--[[drawSkel( skel1, -250, 0, 200 )
 	drawSkel( skel2, -50, 0, 200 )
 	drawSkel( skel3, 150, 0, 200 )]]
+	love.graphics.push()
 	love.graphics.translate( love.graphics.getWidth()*0.5, love.graphics.getHeight()*0.5 )
 	love.graphics.scale( 300 )
 
 	drawGrid()
 
 	--drawSkel( skel, 0, 0 )
-	drawSkel( skel1, 0, 0 )
+	drawSkel( skel1 )
 	love.graphics.setColor( 0.4,0.5,1,1 )
 	love.graphics.circle( "fill", targetPos.x, targetPos.y, 0.02 )
 	local endPoint = targetPos + targetDir*0.05
 	love.graphics.line( targetPos.x, targetPos.y, endPoint.x, endPoint.y )
 	love.graphics.setColor( 0.3,1,0.3,1 )
 	love.graphics.circle( "fill", prevTargetPos.x, prevTargetPos.y, 0.02 )
+	love.graphics.pop()
+
+	love.graphics.setColor(1,1,1,1)
+	love.graphics.print("FPS: "..tostring(love.timer.getFPS( )), 10, 10)
 end
 
 function love.update( dt )
@@ -180,13 +197,22 @@ function love.update( dt )
 	ang = circ*0.25 + math.pi*0.3
 	targetPos = targetPos + cpml.vec3( 0, -circ*0.2, 0 )
 
+	--targetPos = cpml.vec3( math.cos(t)*0.5, math.cos(t*1.3+1)*0.35, 0 )
+
 	targetDir = cpml.vec3( math.sin(ang), math.cos(ang), 0 )
 	--targetDir = cpml.vec3( 0, -1, 0 )
 	--spine[1]:setPos( cpml.vec3( 0, 0.2, 0 ) )
 	--spine[4]:setPos( targetPos )
 	
 	--moveCreature()
-	--Fabrik.solve( spine1, targetPos, targetDir, 2 )
+	skel1.pos = cpml.vec3( math.sin(t)*0.15, math.cos(t)*0.1, 0 )
+	skel1.rot = cpml.quat.from_angle_axis( t*0.9, cpml.vec3( 0,0,1 ) )
+	--print( skel1:toGlobalPos( cpml.vec3( 1, 0, 0 ) ) )
+	--print(skel1.pos)
+	targetPosLocal = skel1:toLocalPos( targetPos )
+	targetDirLocal = skel1:toLocalDir( targetDir )
+	Fabrik.solve( spine1, targetPosLocal, targetDirLocal, 1 )
+	--Fabrik.solve( spine1, targetPos, targetDir, 3 )
 end
 
 function love.keypressed( key )
