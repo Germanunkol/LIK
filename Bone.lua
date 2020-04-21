@@ -297,7 +297,7 @@ function Bone:getDebugData()
 		drawType="line",
 		points = {pS,pE},
 	}
-	--table.insert( data, d )
+	table.insert( data, d )
 
 	-- Draw constraint, if any:
 	if self.constraint then
@@ -335,7 +335,7 @@ function Bone:getDebugData()
 		table.insert( data, d )
 	end
 	-- If I am connected to a parent, draw a transparent line connecting me to it:
-	if self.parent then
+	--[[if self.parent then
 		parentS = self.parent:getPos()
 		myS = self:getPos()
 		-- Insert a line:
@@ -344,7 +344,7 @@ function Bone:getDebugData()
 			points = {parentS,myS},
 		}
 		table.insert( data, d )
-	end
+	end]]
 
 	return data
 end

@@ -55,48 +55,95 @@ function love.load()
 
 	--skel1, spine1 = createLongChain()
 	skel1, spine1 = createShortChain()
+	skel2, spine2 = createShortChain()
 
-	--[[
-
-	skel2 = Skeleton:new()
-
-	b2_1 = Bone:new( skel2, nil, vZero, cpml.quat(), 0.2 )
-	b2_2 = Bone:new( skel2, b2_1, vZero, cpml.quat(), 0.2 )
-	b2_3 = Bone:new( skel2, b2_2, vZero, cpml.quat(), 0.2 )
-
-	b2_1:setConstraint( cpml.vec3(0,0,1), -math.pi*0.5, math.pi*0.1 )
-	b2_2:setConstraint( cpml.vec3(0,0,1), math.pi*0.5, math.pi*0.5 )
-	b2_3:setConstraint( cpml.vec3(0,0,1), -math.pi*0.2, math.pi*0.2 )
-
-	b1_2:setPos( cpml.vec3(0,0.2,0) )
-	b2_2:setPos( cpml.vec3(0,0.2,0) )
-
-	skel3 = Skeleton:new()
-
-	b3_1 = Bone:new( skel3, nil, vZero, cpml.quat(), 0.2 )
-	b3_2 = Bone:new( skel3, b3_1, vZero, cpml.quat(), 0.2 )
-	b3_3 = Bone:new( skel3, b3_2, vZero, cpml.quat(), 0.2 )
-	b3_4 = Bone:new( skel3, b3_1, vZero, cpml.quat(), 0.2 )
-	b3_5 = Bone:new( skel3, b3_4, vZero, cpml.quat(), 0.2 )
-
-	--b3_1:setConstraint( cpml.vec3(0,0,1), -math.pi*0.1, math.pi*0.1 )
-	b3_2:setConstraint( cpml.vec3(0,0,1), 0, math.pi*0.3 )
-	b3_3:setConstraint( cpml.vec3(0,0,1), -math.pi*0.2, math.pi*0.2 )
-	b3_4:setConstraint( cpml.vec3(0,0,1), -math.pi*0.3, 0 )
-	b3_5:setConstraint( cpml.vec3(0,0,1), -math.pi*0.2, math.pi*0.2 )
-
-	b3_2:setPos( cpml.vec3(0,0.2,0) )
-	b3_4:setPos( cpml.vec3(0,-0.2,0) )]]
-
-	--b2:setConstraint( cpml.vec3(0,1,1), -math.pi*0.01, math.pi*0.1 )
 	--setupCreature()
 	
 	targetDir = cpml.vec3(0,1,0)
 	prevTargetPos = cpml.vec3()
 end
 
-function drawSkel( skel )
+function love.update( dt )
+	t = love.timer.getTime()
+
+	speed = 0.5
+	baseX = speed*t
+	stepSize = 0.3
+
+	footPlacementCycleLen = 2
+	curCyclePos = t % footPlacementCycleLen
+	cycleNorm = curCyclePos/footPlacementCycleLen
+	footRaise = 0.1
+
+	targetDir = cpml.vec3( 1,0,0 )
+	-- Foot on ground:
+	if cycleNorm < 0.75 then
+		factor = (1-2*cycleNorm/0.75)
+		dx = stepSize*factor
+		targetX = baseX + dx
+		targetY = getFloorHeight( targetX, 0 )
+	-- Foot in air:
+	else
+		factor = (cycleNorm-0.75)/0.25
+		dx = 2*stepSize*factor - stepSize
+		targetX = baseX + dx
+		local curRaise = footRaise*math.sin( factor*math.pi )
+		targetY = getFloorHeight( targetX, 0 ) - curRaise
+	end
+	targetPos = cpml.vec3( targetX, targetY, 0 )
+	targetPosLocal = skel1:toLocalPos( targetPos )
+	targetDirLocal = skel1:toLocalDir( targetDir )
+
+	--floorPos = cpml.vec3( 0, 0.4, 0 )
+	--floorPos = floorPos + cpml.vec3( 0, 0.1*math.cos(t*0.1), 0 )
+	ang = cycleNorm*math.pi*2
+	skel1.pos = cpml.vec3( baseX + 0.2 + math.sin(ang)*0.02, math.cos(-ang)*0.05, 0 )
+
+	Fabrik.solve( spine1, targetPosLocal, targetDirLocal, 20 )
+
+
+	cycleNorm = cycleNorm - 0.5
+	if cycleNorm < 0 then
+		cycleNorm = cycleNorm + 1
+	end
+	-- Foot on ground:
+	if cycleNorm < 0.75 then
+		factor = (1-2*cycleNorm/0.75)
+		dx = stepSize*factor
+		targetX = baseX + dx
+		targetY = getFloorHeight( targetX, -0.2 )
+	-- Foot in air:
+	else
+		factor = (cycleNorm-0.75)/0.25
+		dx = 2*stepSize*factor - stepSize
+		targetX = baseX + dx
+		local curRaise = footRaise*math.sin( factor*math.pi )
+		targetY = getFloorHeight( targetX, -0.2 ) - curRaise
+	end
+	targetPos2 = cpml.vec3( targetX, targetY, 0 )
+	targetPosLocal = skel2:toLocalPos( targetPos2 )
+	targetDirLocal = skel2:toLocalDir( targetDir )
+	skel2.pos = cpml.vec3( baseX + 0.2 + math.sin(ang+math.pi)*0.02, math.cos(-ang+math.pi)*0.05, 0 )
+
+	Fabrik.solve( spine2, targetPosLocal, targetDirLocal, 20 )
+
+	--[[targetDir = cpml.vec3( 1,0,0 )
+	targetPos = getFootPlacement( t, ang+math.pi*0.5, 0 )
+	targetPosLocal = skel2:toLocalPos( targetPos )
+	targetDirLocal = skel2:toLocalDir( targetDir )
+	Fabrik.solve( spine2, targetPosLocal, targetDirLocal, 20 )]]
+
+	if Fabrik.validateChain( spine1 ) ~= true then
+		love.graphics.captureScreenshot( "debug.png" )
+		love.event.quit()
+	end
+	--Fabrik.solve( spine1, targetPos, targetDir, 3 )
+end
+
+
+function drawSkel( skel, alpha )
 	data = skel:getDebugData()
+	alpha = alpha or 1
 
 	love.graphics.push()
 	love.graphics.translate( skel.pos.x, skel.pos.y )
@@ -110,7 +157,7 @@ function drawSkel( skel )
 	--love.graphics.scale( scale )
 	love.graphics.setLineWidth( 1/200 )
 	for i,d in ipairs(data) do
-		love.graphics.setColor( d.col )
+		love.graphics.setColor( d.col[1], d.col[2], d.col[3], d.col[4]*alpha )
 		if d.drawType == "line" then
 			p = d.points
 			love.graphics.line( p[1].x, p[1].y, p[2].x, p[2].y )
@@ -128,18 +175,20 @@ function drawSkel( skel )
 
 end
 
-function drawGrid()
+function drawGrid( baseX )
 	love.graphics.setColor( 1,1,1,0.1 )
-	for x=-1,1,0.1 do
+	baseXrounded = math.floor( baseX )
+	for dx=-2,3,0.1 do
+		x = baseXrounded + dx
 		love.graphics.line( x, -1, x, 1 )
 	end
 	for y=-1,1,0.1 do
-		love.graphics.line( -1, y, 1, y )
+		love.graphics.line( baseXrounded -2, y, baseXrounded + 3, y )
 	end
 	love.graphics.setColor( 1,1,1,0.3 )
-	love.graphics.line( 0, -1, 0, 1 )
 	love.graphics.line( -1, 0, 1, 0 )
 end
+
 
 function love.draw()
 	--[[drawSkel( skel1, -250, 0, 200 )
@@ -149,109 +198,69 @@ function love.draw()
 	love.graphics.translate( love.graphics.getWidth()*0.5, love.graphics.getHeight()*0.5 )
 	love.graphics.scale( 300 )
 
-	drawGrid()
+	love.graphics.translate( -baseX, 0 )
+	drawGrid( baseX )
 
 	--drawSkel( skel, 0, 0 )
-	drawSkel( skel1 )
 	love.graphics.setColor( 0.4,0.5,1,1 )
-	--love.graphics.circle( "fill", targetPos.x, targetPos.y, 0.02 )
+	love.graphics.circle( "fill", targetPos.x, targetPos.y, 0.02 )
 	local endPoint = targetPos + targetDir*0.05
-	--love.graphics.line( targetPos.x, targetPos.y, endPoint.x, endPoint.y )
-	love.graphics.setColor( 0.3,1,0.3,1 )
-	--love.graphics.circle( "fill", prevTargetPos.x, prevTargetPos.y, 0.02 )
+	love.graphics.line( targetPos.x, targetPos.y, endPoint.x, endPoint.y )
 	
+	baseX = speed*t
 	-- Draw the floor:
-	love.graphics.setColor( 0.8, 0.8, 1, 0.5 )
 	floor = {}
-	for x=-1,1,0.05 do
-		pos = getFloorPos( t, x )
-		table.insert( floor, x )
-		table.insert( floor, pos.y )
+	for x=-1,1,0.01 do
+		y = getFloorHeight( baseX + x, -0.2 )
+		table.insert( floor, baseX + x )
+		table.insert( floor, y )
 	end
+	love.graphics.setColor( 0.8, 0.8, 1, 0.3 )
 	love.graphics.line( floor )
+	floor = {}
+	for x=-1,1,0.01 do
+		y = getFloorHeight( baseX + x, 0 )
+		table.insert( floor, baseX + x )
+		table.insert( floor, y )
+	end
+	love.graphics.setColor( 0.8, 0.8, 1, 0.7 )
+	love.graphics.line( floor )
+
+	-- Draw reference posts:
+	--[[baseXrounded = math.floor( baseX )
+	print(baseX, baseXrounded)
+	height = 0.03
+	love.graphics.setColor( 0.8, 0.8, 1, 0.3 )
+	for dx=-1,2,0.2 do
+		x = baseXrounded + dx
+		y = getFloorHeight( baseXrounded + dx, 0 )
+		love.graphics.line( x, y, x, y-height )
+	end]]
+
+	drawSkel( skel2, 0.3 )
+	drawSkel( skel1, 1 )
+
 	love.graphics.pop()
 
 	love.graphics.setColor(1,1,1,1)
 	love.graphics.print("FPS: "..tostring(love.timer.getFPS( )), 10, 10)
 end
 
-function getFloorPos( t, x )
-	local p = cpml.vec3( 0, 0.35, 0 )
-	p = p + cpml.vec3( 0, 0.05*math.cos(t*0.3+x*0.3), 0 )
-	return p
+function getFloorHeight( x, y )
+	local noise = love.math.noise( x, y )
+	h = 0.25 + noise*0.1
+	return h
 end
 
-function love.update( dt )
-	t = love.timer.getTime()
-	--q1 = cpml.quat.from_angle_axis( t, cpml.vec3(0,0,1) )
-	--b1:setLocalRot( q1 )
-
-	--[[ang = math.cos(t)*0.2
-	q2 = cpml.quat.from_angle_axis( ang, cpml.vec3(0,0,1) )
-	b2:setLocalRot( q2 )
-
-	ang = math.cos(t*2)*0.2
-	q2 = cpml.quat.from_angle_axis( ang, cpml.vec3(0,0,1) )
-	b3:setLocalRot( q2 )]]
-	
-	--[[ang = math.sin( t )
-	q2 = cpml.quat.from_angle_axis( ang, cpml.vec3(0,0,1) )
-	b1_1:setLocalRot( q2 )
-	b1_2:setLocalRot( q2 )
-	b1_3:setLocalRot( q2 )
-
-	b2_1:setLocalRot( q2 )
-	b2_2:setLocalRot( q2 )
-	b2_3:setLocalRot( q2 )
-	
-	b3_1:setLocalRot( q2 )
-	b3_2:setLocalRot( q2 )
-	b3_3:setLocalRot( q2 )
-	b3_4:setLocalRot( q2 )
-	b3_5:setLocalRot( q2 )]]
-
-	--floorPos = cpml.vec3( 0, 0.4, 0 )
-	--floorPos = floorPos + cpml.vec3( 0, 0.1*math.cos(t*0.1), 0 )
-
-	--targetPos = cpml.vec3( 0.5, -0.5, 0 )
-	cycleLen = 4
-	cycle = t - math.floor( t/cycleLen )
-	cycleNorm = t/cycleLen
-	ang = math.pi*2*cycleNorm
-
+function getFootPlacement( baseX, ang, y )
 	raise = 0.1
-	len = 0.2
+	len = 0.3
 
 	x = len*math.cos( ang )
-	floorPos = getFloorPos( t, x )
+	floorPos = getFloorPos( baseX + x, y )
 
 	targetPos = floorPos + cpml.vec3( x, math.min(raise*math.sin( ang ),0), 0 )
-	
-	footAng = pos
-
-	--targetPos = cpml.vec3( math.cos(t)*0.5, math.cos(t*1.3+1)*0.35, 0 )
-
-	targetDir = cpml.vec3( 1,0,0 )
-	--targetDir = cpml.vec3( 0, -1, 0 )
-	--spine[1]:setPos( cpml.vec3( 0, 0.2, 0 ) )
-	--spine[4]:setPos( targetPos )
-	
-	--moveCreature()
-	skel1.pos = cpml.vec3( math.sin(-ang)*raise*2, math.cos(-ang)*raise*0.5, 0 )
-	--skel1.rot = cpml.quat.from_angle_axis( ang, cpml.vec3( 0,0,1 ) )
-	--print( skel1:toGlobalPos( cpml.vec3( 1, 0, 0 ) ) )
-	--print(skel1.pos)
-	targetPosLocal = skel1:toLocalPos( targetPos )
-	targetDirLocal = skel1:toLocalDir( targetDir )
-	--targetPosLocal = cpml.vec3(-0.230,0.239,0.000)
-	--Fabrik.solve( spine1, targetPosLocal, targetDirLocal, 5 )
-	print(targetPosLocal, targetDirLocal )
-	Fabrik.solve( spine1, targetPosLocal, targetDirLocal, 20 )
-	if Fabrik.validateChain( spine1 ) ~= true then
-		love.graphics.captureScreenshot( "debug.png" )
-		love.event.quit()
-	end
-	--Fabrik.solve( spine1, targetPos, targetDir, 3 )
+	return targetPos
 end
 
 function love.keypressed( key )
