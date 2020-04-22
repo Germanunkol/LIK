@@ -11,12 +11,14 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 	--maxIterations = 1
 
 	for i=1,maxIterations do
-		
-		-- Forward pass:
+
+		-- Store bone offsets:
 		local lPos = {}
 		for j,b in ipairs(chain) do
 			lPos[b] = b.lPos
 		end
+		
+		-- Forward pass:
 		chain[#chain]:setPos( targetPos )
 		if targetDir then
 			targetRot = rotBetweenVecs( cpml.vec3(1,0,0), targetDir )
@@ -36,7 +38,11 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 
 			-- Get the current offset between the curBone and the child bone:
 			local curLen = cpml.vec3.len( lPos[curChild] )
-			local newPos = cpml.vec3.normalize(curPos - curChildPos)*curLen + curChildPos
+			local curDiff = cpml.vec3.normalize(curPos - curChildPos)
+			if cpml.vec3.len( curDiff ) == 0 then
+				curDiff = cpml.vec3(1,0,0)
+			end
+			local newPos = curDiff*curLen + curChildPos
 
 			curBone:setPosFixedChild( newPos, curChild )
 
@@ -64,6 +70,7 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 		chain[1]:setPosFixedChild( rootPos, chain[2] )
 		chain[1]:setLocalRotFixedChild( chain[1].lRot, chain[2] )
 		for j=2,#chain do
+			--if j>2 then return end
 			local curBone = chain[j]
 			local curParent = chain[j-1]
 			local curPos = curBone:getPos()
@@ -71,7 +78,11 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 			local curChild = chain[j+1]
 
 			local curLen = cpml.vec3.len( lPos[curBone] )
-			local newPos = cpml.vec3.normalize(curPos - curParentPos)*curLen + curParentPos
+			local curDiff = cpml.vec3.normalize(curPos - curParentPos)
+			if cpml.vec3.len( curDiff ) == 0 then
+				curDiff = cpml.vec3(-1,0,0)
+			end
+			local newPos = curDiff*curLen + curParentPos
 
 			if curChild then
 				curBone:setPosFixedChild( newPos, chain[j+1] )

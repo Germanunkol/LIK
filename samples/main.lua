@@ -142,7 +142,7 @@ end
 
 
 function drawSkel( skel, alpha )
-	data = skel:getDebugData()
+	data = skel:getDebugData( true )
 	alpha = alpha or 1
 
 	love.graphics.push()
@@ -159,16 +159,9 @@ function drawSkel( skel, alpha )
 	for i,d in ipairs(data) do
 		love.graphics.setColor( d.col[1], d.col[2], d.col[3], d.col[4]*alpha )
 		if d.drawType == "line" then
-			p = d.points
-			love.graphics.line( p[1].x, p[1].y, p[2].x, p[2].y )
-		elseif d.drawType == "quad" then
-			p = d.points
-			love.graphics.polygon( "fill",
-				p[1].x, p[1].y,
-				p[2].x, p[2].y,
-				p[3].x, p[3].y,
-				p[4].x, p[4].y )
-
+			love.graphics.line( d.points )
+		elseif d.drawType == "poly" then
+			love.graphics.polygon( "fill", d.points )
 		end
 	end
 	love.graphics.pop()

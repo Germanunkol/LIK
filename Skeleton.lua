@@ -39,15 +39,31 @@ function Skeleton:toLocalDir( vec )
 	return rotated
 end
 
-function Skeleton:getDebugData()
+function Skeleton:getDebugData( drawConstraints )
 	local data = {}
 	for b,t in pairs(self.bones) do
-		local boneData = b:getDebugData()
+		local boneData = b:getDebugData( drawConstraints )
 		for key, elem in pairs(boneData) do
 			table.insert( data, elem )
 		end
 	end
 	return data
 end
+
+function test()
+	print("Testing Skeleton functions")
+	local skel = Skeleton:new()
+	skel.pos = cpml.vec3( math.random(), math.random(), math.random() )
+	skel.rot = cpml.quat.from_angle_axis( math.random(), cpml.vec3(0,0,1) )
+
+	local pos = cpml.vec3(math.random(), math.random(), math.random())
+	local lPos = skel:toLocalPos( pos )
+	local posRecon = skel:toGlobalPos( lPos )
+
+	print("Pos", pos)
+	print("local pos", lPos)
+	print("reconstructed pos", posRecon )
+end
+test()
 
 return Skeleton

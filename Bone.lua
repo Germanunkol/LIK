@@ -273,7 +273,7 @@ function Bone:setConstraint( axis, minAng, maxAng )
 	}
 end
 
-function Bone:getDebugData()
+function Bone:getDebugData( drawConstraints )
 	local data = {}
 
 	local pS = self:getPos()
@@ -281,58 +281,52 @@ function Bone:getDebugData()
 	local len = cpml.vec3.len( pS - pE )
 	--r = b:getRot()
 	--tmp = cpml.vec3( 1,0,0 )
-	local w = 0.15
-	local pO0 = self:toGlobalPos( cpml.vec3( len*0.05, len*w, 0 ) )
-	local pO1 = self:toGlobalPos( cpml.vec3( len*0.05, -len*w, 0 ) )
+	local w = 0.03
+	local pO0 = self:toGlobalPos( cpml.vec3( len*0.05, w, 0 ) )
+	local pO1 = self:toGlobalPos( cpml.vec3( len*0.05, -w, 0 ) )
 
 	-- Insert a quad:
-	local d = { col={0.25,0.25,0.5, 0.9},
-		drawType="quad",
-		points = {pS,pO0,pE,pO1},
+	local d = { col={0.25,0.25,0.5,0.6},
+		drawType="poly",
+		points = {pS.x,pS.y,pO0.x,pO0.y,pE.x,pE.y,pO1.x,pO1.y},
 	}
 	table.insert( data, d )
 
 	-- Insert a line:
-	local d = { col={0.9,0.9,0.9, 0.9},
+	local d = { col={0.9,0.9,0.9, 0.3},
 		drawType="line",
-		points = {pS,pE},
+		points = {pS.x,pS.y,pE.x,pE.y},
 	}
 	table.insert( data, d )
 
 	-- Draw constraint, if any:
-	if self.constraint then
+	if drawConstraints and self.constraint then
 		local minRot = cpml.quat.from_angle_axis( self.constraint.minAng,
 				self.constraint.axis )
 		local maxRot = cpml.quat.from_angle_axis( self.constraint.maxAng,
 				self.constraint.axis )
 
 		-- My end pos in local coordinates...
-		local lEndPos = cpml.vec3( self.len*0.5,0,0 )
+		local lEndPos = cpml.vec3( 0.5*self.len,0,0 )
 		-- ... rotated by the constraints:
-		local lEndPosRotMin = cpml.quat.mul_vec3( minRot, lEndPos )
-		local lEndPosRotMax = cpml.quat.mul_vec3( maxRot, lEndPos )
+		local d = { col={0.9,0.2,0.2,0.4},
+			drawType="poly",
+			points = {pS.x, pS.y}
+		}
 
-		local pMin, pMax = lEndPosRotMin+pS, lEndPosRotMax+pS
 		if self.parent then
-			endPosRotMinParent = cpml.quat.mul_vec3( self.parent:getRot(),
-					lEndPosRotMin + self.lPos )
-			pMin = self.parent:getPos() + endPosRotMinParent
-			
-			endPosRotMaxParent = cpml.quat.mul_vec3( self.parent:getRot(),
-					lEndPosRotMax + self.lPos )
-			pMax = self.parent:getPos() + endPosRotMaxParent
+			for i=0,10 do
+				local curRot = cpml.quat.slerp( minRot, maxRot, i/10 )
+				local lCurPos = cpml.quat.mul_vec3( curRot, lEndPos )
+				local curPos = self.parent:toGlobalPos( self.lPos + lCurPos )
+				table.insert( d.points, curPos.x )
+				table.insert( d.points, curPos.y )
+			end
+			table.insert( data, d )
+		else
+
 		end
 		
-		local d = { col={0.9,0.2,0.2,0.9},
-			drawType="line",
-			points = {pS,pMin},
-		}
-		table.insert( data, d )
-		local d = { col={0.9,0.2,0.2,0.9},
-			drawType="line",
-			points = {pS,pMax},
-		}
-		table.insert( data, d )
 	end
 	-- If I am connected to a parent, draw a transparent line connecting me to it:
 	--[[if self.parent then
@@ -341,7 +335,7 @@ function Bone:getDebugData()
 		-- Insert a line:
 		local d = { col={0.9,0.9,0.9, 0.3},
 			drawType="line",
-			points = {parentS,myS},
+			points = {parentS.x,parentS.y,myS.x,myS.y},
 		}
 		table.insert( data, d )
 	end]]
