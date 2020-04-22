@@ -64,7 +64,7 @@ function love.load()
 end
 
 function love.update( dt )
-	t = love.timer.getTime()
+	t = love.timer.getTime()*0.5
 
 	speed = 0.5
 	baseX = speed*t
@@ -77,53 +77,65 @@ function love.update( dt )
 
 	targetDir = cpml.vec3( 1,0,0 )
 	-- Foot on ground:
+	local curRaise = 0
 	if cycleNorm < 0.75 then
 		factor = (1-2*cycleNorm/0.75)
 		dx = stepSize*factor
-		targetX = baseX + dx
-		targetY = getFloorHeight( targetX, 0 )
 	-- Foot in air:
 	else
 		factor = (cycleNorm-0.75)/0.25
 		dx = 2*stepSize*factor - stepSize
-		targetX = baseX + dx
-		local curRaise = footRaise*math.sin( factor*math.pi )
-		targetY = getFloorHeight( targetX, 0 ) - curRaise
+		curRaise = footRaise*math.sin( factor*math.pi )
 	end
+	targetX = baseX + dx
+	leftFloorHeight = getFloorHeight( targetX, 0 )
+	targetY = leftFloorHeight - curRaise
 	targetPos = cpml.vec3( targetX, targetY, 0 )
 
 	--floorPos = cpml.vec3( 0, 0.4, 0 )
 	--floorPos = floorPos + cpml.vec3( 0, 0.1*math.cos(t*0.1), 0 )
-	ang = cycleNorm*math.pi*2
-	skel1.pos = cpml.vec3( baseX + 0.2 + math.sin(ang)*0.02, math.cos(-ang)*0.05, 0 )
-	targetPosLocal = skel1:toLocalPos( targetPos )
-	targetDirLocal = skel1:toLocalDir( targetDir )
-
-	Fabrik.solve( spine1, targetPosLocal, targetDirLocal, 20 )
+	leftFootTargetPos = targetPos
+	leftFootTargetDir = targetDir
 
 
 	cycleNorm = cycleNorm - 0.5
 	if cycleNorm < 0 then
 		cycleNorm = cycleNorm + 1
 	end
+
+	targetDir = cpml.vec3( 1,0,0 )
 	-- Foot on ground:
+	local curRaise = 0
 	if cycleNorm < 0.75 then
 		factor = (1-2*cycleNorm/0.75)
 		dx = stepSize*factor
-		targetX = baseX + dx
-		targetY = getFloorHeight( targetX, -0.2 )
 	-- Foot in air:
 	else
 		factor = (cycleNorm-0.75)/0.25
 		dx = 2*stepSize*factor - stepSize
-		targetX = baseX + dx
-		local curRaise = footRaise*math.sin( factor*math.pi )
-		targetY = getFloorHeight( targetX, -0.2 ) - curRaise
+		curRaise = footRaise*math.sin( factor*math.pi )
 	end
-	targetPos2 = cpml.vec3( targetX, targetY, 0 )
-	targetPosLocal = skel2:toLocalPos( targetPos2 )
-	targetDirLocal = skel2:toLocalDir( targetDir )
-	skel2.pos = cpml.vec3( baseX + 0.2 + math.sin(ang+math.pi)*0.02, math.cos(-ang+math.pi)*0.05, 0 )
+	targetX = baseX + dx
+	rightFloorHeight = getFloorHeight( targetX, -0.2 )
+	targetY = rightFloorHeight - curRaise
+	targetPos = cpml.vec3( targetX, targetY, 0 )
+	rightFootTargetPos = targetPos
+	rightFootTargetDir = targetDir
+
+	baseHeight = -0.35
+
+	curHeight = (leftFloorHeight + rightFloorHeight)/2
+	leftHeight = (curHeight + leftFloorHeight)/2 + baseHeight
+	rightHeight = (curHeight + rightFloorHeight)/2 + baseHeight
+
+	skel1.pos = cpml.vec3( baseX + 0.2, leftHeight, 0 )
+	targetPosLocal = skel1:toLocalPos( leftFootTargetPos )
+	targetDirLocal = skel1:toLocalDir( leftFootTargetDir )
+	Fabrik.solve( spine1, targetPosLocal, targetDirLocal, 20 )
+
+	skel2.pos = cpml.vec3( baseX + 0.2, rightHeight, 0 )
+	targetPosLocal = skel2:toLocalPos( rightFootTargetPos )
+	targetDirLocal = skel2:toLocalDir( rightFootTargetDir )
 
 	Fabrik.solve( spine2, targetPosLocal, targetDirLocal, 20 )
 
@@ -230,8 +242,9 @@ function love.draw()
 		love.graphics.line( x, y, x, y-height )
 	end]]
 
-	drawSkel( skel2, 0.3 )
+	drawSkel( skel2, 0.6 )
 	drawSkel( skel1, 1 )
+	love.graphics.line( skel1.pos.x, skel1.pos.y, skel2.pos.x, skel2.pos.y )
 
 	love.graphics.pop()
 
@@ -241,7 +254,7 @@ end
 
 function getFloorHeight( x, y )
 	local noise = love.math.noise( x, y )
-	h = 0.25 + noise*0.1
+	h = 0.25 + noise*0.3
 	return h
 end
 
