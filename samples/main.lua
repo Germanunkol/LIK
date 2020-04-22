@@ -20,7 +20,7 @@ function createShortChain()
 
 	spine = { b1_0, b1_1, b1_2, b1_3, b1_4 }
 
-	--b1_1:setConstraint( cpml.vec3(0,0,1), -math.pi*0.5, math.pi*0.5 )
+	b1_1:setConstraint( cpml.vec3(0,0,1), -math.pi*0.5, math.pi*0.5 )
 	b1_0:setConstraint( cpml.vec3(0,0,1), -math.pi, -math.pi )
 	b1_1:setConstraint( cpml.vec3(0,0,1), -math.pi*0.9, math.pi*0.1 )
 	b1_2:setConstraint( cpml.vec3(0,0,1), -math.pi, -math.pi*0.1 )
@@ -91,13 +91,13 @@ function love.update( dt )
 		targetY = getFloorHeight( targetX, 0 ) - curRaise
 	end
 	targetPos = cpml.vec3( targetX, targetY, 0 )
-	targetPosLocal = skel1:toLocalPos( targetPos )
-	targetDirLocal = skel1:toLocalDir( targetDir )
 
 	--floorPos = cpml.vec3( 0, 0.4, 0 )
 	--floorPos = floorPos + cpml.vec3( 0, 0.1*math.cos(t*0.1), 0 )
 	ang = cycleNorm*math.pi*2
 	skel1.pos = cpml.vec3( baseX + 0.2 + math.sin(ang)*0.02, math.cos(-ang)*0.05, 0 )
+	targetPosLocal = skel1:toLocalPos( targetPos )
+	targetDirLocal = skel1:toLocalDir( targetDir )
 
 	Fabrik.solve( spine1, targetPosLocal, targetDirLocal, 20 )
 
