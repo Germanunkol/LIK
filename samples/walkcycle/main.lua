@@ -1,5 +1,5 @@
-package.path = "../?.lua;" .. package.path
-package.path = "../?/init.lua;" .. package.path
+package.path = "../../?.lua;" .. package.path
+package.path = "../../?/init.lua;" .. package.path
 
 local Skeleton = require("Skeleton")
 local Bone = require("Bone")
