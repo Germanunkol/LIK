@@ -12,9 +12,12 @@ function createShortChain()
 	local vZero = cpml.vec3(0,0,0)
 	local skel = Skeleton:new()
 
-	local b1_0 = Bone:new( skel, nil, vZero, cpml.quat(), 0.1 )
-	local b1_1 = Bone:new( skel, b1_0, cpml.vec3(0.1,0,0), cpml.quat(), 0.2 )
-	local b1_2 = Bone:new( skel, b1_1, cpml.vec3(0.2,0,0), cpml.quat(), 0.2 )
+	local noRot = cpml.quat(0,0,0,1)
+	print("NO ROT", noRot, toAngleAxis( noRot ) )
+
+	local b1_0 = Bone:new( skel, nil, vZero, noRot, 0.1 )
+	local b1_1 = Bone:new( skel, b1_0, cpml.vec3(0.1,0,0), noRot, 0.2 )
+	local b1_2 = Bone:new( skel, b1_1, cpml.vec3(0.2,0,0), noRot, 0.2 )
 	--local b1_3 = Bone:new( skel, b1_2, cpml.vec3(0.2,0,0), cpml.quat(), 0.07 )
 	--local b1_4 = Bone:new( skel, b1_3, cpml.vec3(0.07,0,0), cpml.quat(), 0.03 )
 
@@ -36,7 +39,7 @@ function love.load()
 
 	targetDir = cpml.vec3(0,1,0)
 
-	cursorX, cursorY = 0,0
+	cursorX, cursorY = -0.4,0
 
 	love.keyboard.setKeyRepeat( true )
 end
@@ -45,10 +48,9 @@ function love.update( dt )
 	t = love.timer.getTime()
 
 	speed = 0.5
-	baseX = speed*t
+	baseX = 0
 	stepSize = 0.3
 
-	baseX = speed*t
 	basePos = cpml.vec3( baseX, 0, 0 )
 
 	targetPos = basePos + cpml.vec3( cursorX, cursorY, 0 )
@@ -80,12 +82,12 @@ function drawGrid( baseX )
 end
 
 function drawSkel( skel, alpha )
-	data = skel:getDebugData()
+	data = skel:getDebugData( true )
 	alpha = alpha or 1
 
 	love.graphics.push()
 	love.graphics.translate( skel.pos.x, skel.pos.y )
-	local ang,axis = cpml.quat.to_angle_axis( skel.rot )
+	local ang,axis = toAngleAxis( skel.rot )
 	if axis.z < 0 then
 		axis = -axis
 		ang = -ang
@@ -132,8 +134,6 @@ function love.draw()
 		love.graphics.line( prevTargetPos.x + baseX, prevTargetPos.y, endPoint.x + baseX, endPoint.y )
 	end
 	
-	baseX = speed*t
-
 	drawSkel( skel, 1 )
 
 	love.graphics.pop()
@@ -176,7 +176,9 @@ function love.keypressed( key, code, isrepeat )
 
 		skel.pos = cpml.vec3( baseX, 0, 0 )
 
-		Fabrik.solve( spine, targetPosLocal, targetDirLocal, 1 )
+		print( targetPos )
+
+		Fabrik.solve( spine, targetPosLocal, targetDirLocal, 10 )
 		--Fabrik.solve( spine, targetPosLocal, nil, 20 )
 		prevTargetPos = targetPos
 		prevTargetDir = targetDir

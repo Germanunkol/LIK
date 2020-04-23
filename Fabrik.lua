@@ -66,6 +66,10 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 
 		end
 
+		--if love.keyboard.isDown("t") then
+			--return
+		--end
+
 		-- Backward pass:
 		chain[1]:setPosFixedChild( rootPos, chain[2] )
 		chain[1]:setLocalRotFixedChild( chain[1].lRot, chain[2] )

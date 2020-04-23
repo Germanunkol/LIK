@@ -52,4 +52,13 @@ function angBetweenVecs( vec1, vec2, up )
 	end
 end
 
+function toAngleAxis( q )
+	local ang, axis = cpml.quat.to_angle_axis( q )
+	if cpml.vec3.len( axis ) < 0.9999 then
+		axis = cpml.vec3(1,0,0)
+		ang = 0
+	end
+	return ang, axis
+end
+
 
