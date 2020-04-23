@@ -8,6 +8,8 @@ local Fabrik = require("Fabrik")
 local class = require("lib.middleclass.middleclass")
 local cpml = require("lib.cpml")
 
+require("profile")
+
 function createShortChain()
 	local vZero = cpml.vec3(0,0,0)
 	local skel = Skeleton:new()
@@ -39,7 +41,7 @@ function createLongChain()
 	b:setConstraint( cpml.vec3(0,0,1), 0.5*math.pi, 0.5*math.pi )
 	table.insert(spine, b)
 
-	for i=1,15 do
+	for i=1,10 do
 		b = Bone:new( skel, b, cpml.vec3(segLen,0,0), cpml.quat(), segLen )
 		--if i < 10 then
 			b:setConstraint( cpml.vec3(0,0,1), -math.pi*0.3, math.pi*0.3 )
@@ -53,7 +55,6 @@ end
 
 function love.load()
 
-	--skel1, spine1 = createLongChain()
 	skel1, spine1 = createShortChain()
 	skel2, spine2 = createShortChain()
 
@@ -61,33 +62,35 @@ function love.load()
 	
 	targetDir = cpml.vec3(0,1,0)
 	prevTargetPos = cpml.vec3()
+
+	showConstraints = false
+	speed = 0.5
+	baseX = 0
 end
 
 function love.update( dt )
-	t = love.timer.getTime()*0.5
+	t = love.timer.getTime()
 
-	speed = 0.5
-	baseX = speed*t
-	stepSize = 0.3
+	baseX = baseX + speed*dt
+	stepSize = 0.7
 
-	footPlacementCycleLen = 2
-	curCyclePos = t % footPlacementCycleLen
-	cycleNorm = curCyclePos/footPlacementCycleLen
 	footRaise = 0.1
+
+	curStepPos = math.floor(baseX/stepSize)*stepSize + stepSize*0.5
+	stepPercentage = (baseX - math.floor(baseX/stepSize)*stepSize)/stepSize
 
 	targetDir = cpml.vec3( 1,0,0 )
 	-- Foot on ground:
 	local curRaise = 0
-	if cycleNorm < 0.75 then
-		factor = (1-2*cycleNorm/0.75)
-		dx = stepSize*factor
+	if stepPercentage < 0.75 then
+		targetX = curStepPos
 	-- Foot in air:
 	else
-		factor = (cycleNorm-0.75)/0.25
-		dx = 2*stepSize*factor - stepSize
+		factor = (stepPercentage-0.75)/0.25
+		stepForward = stepSize*factor
+		targetX = curStepPos + stepForward
 		curRaise = footRaise*math.sin( factor*math.pi )
 	end
-	targetX = baseX + dx
 	leftFloorHeight = getFloorHeight( targetX, 0 )
 	targetY = leftFloorHeight - curRaise
 	targetPos = cpml.vec3( targetX, targetY, 0 )
@@ -97,25 +100,26 @@ function love.update( dt )
 	leftFootTargetPos = targetPos
 	leftFootTargetDir = targetDir
 
+	curStepPos = math.floor((baseX+stepSize*0.5)/stepSize)*stepSize
+	stepPercentage = (baseX - math.floor(baseX/stepSize)*stepSize)/stepSize
 
-	cycleNorm = cycleNorm - 0.5
-	if cycleNorm < 0 then
-		cycleNorm = cycleNorm + 1
+	stepPercentage = stepPercentage + 0.5
+	if stepPercentage > 1 then
+		stepPercentage = stepPercentage - 1
 	end
 
 	targetDir = cpml.vec3( 1,0,0 )
 	-- Foot on ground:
 	local curRaise = 0
-	if cycleNorm < 0.75 then
-		factor = (1-2*cycleNorm/0.75)
-		dx = stepSize*factor
+	if stepPercentage < 0.75 then
+		targetX = curStepPos
 	-- Foot in air:
 	else
-		factor = (cycleNorm-0.75)/0.25
-		dx = 2*stepSize*factor - stepSize
+		factor = (stepPercentage-0.75)/0.25
+		stepForward = stepSize*factor
+		targetX = curStepPos + stepForward
 		curRaise = footRaise*math.sin( factor*math.pi )
 	end
-	targetX = baseX + dx
 	rightFloorHeight = getFloorHeight( targetX, -0.2 )
 	targetY = rightFloorHeight - curRaise
 	targetPos = cpml.vec3( targetX, targetY, 0 )
@@ -131,6 +135,7 @@ function love.update( dt )
 	skel1.pos = cpml.vec3( baseX + 0.2, leftHeight, 0 )
 	targetPosLocal = skel1:toLocalPos( leftFootTargetPos )
 	targetDirLocal = skel1:toLocalDir( leftFootTargetDir )
+
 	Fabrik.solve( spine1, targetPosLocal, targetDirLocal, 20 )
 
 	skel2.pos = cpml.vec3( baseX + 0.2, rightHeight, 0 )
@@ -154,7 +159,7 @@ end
 
 
 function drawSkel( skel, alpha )
-	data = skel:getDebugData( true )
+	data = skel:getDebugData( showConstraints )
 	alpha = alpha or 1
 
 	love.graphics.push()
@@ -191,7 +196,7 @@ function drawGrid( baseX )
 		love.graphics.line( baseXrounded -2, y, baseXrounded + 3, y )
 	end
 	love.graphics.setColor( 1,1,1,0.3 )
-	love.graphics.line( -1, 0, 1, 0 )
+	--love.graphics.line( -1, 0, 1, 0 )
 end
 
 
@@ -208,11 +213,11 @@ function love.draw()
 
 	--drawSkel( skel, 0, 0 )
 	love.graphics.setColor( 0.4,0.5,1,1 )
-	love.graphics.circle( "fill", targetPos.x, targetPos.y, 0.02 )
-	local endPoint = targetPos + targetDir*0.05
-	love.graphics.line( targetPos.x, targetPos.y, endPoint.x, endPoint.y )
+	love.graphics.circle( "fill", leftFootTargetPos.x, leftFootTargetPos.y, 0.02 )
+	local endPoint = leftFootTargetPos + targetDir*0.05
+	love.graphics.line( leftFootTargetPos.x, leftFootTargetPos.y, endPoint.x, endPoint.y )
 	
-	baseX = speed*t
+	--baseX = speed*t
 	-- Draw the floor:
 	floor = {}
 	for x=-1,1,0.01 do
@@ -273,6 +278,12 @@ function love.keypressed( key )
 	if key == "space" then
 		Fabrik.solve( spine1, targetPos, targetDir, 2 )
 		--prevTargetPos = targetPos
+	elseif key == "d" then
+		showConstraints = not showConstraints
+	elseif key == "right" then
+		speed = speed + 0.1
+	elseif key == "left" then
+		speed = speed - 0.1
 	end
 end
 
