@@ -58,13 +58,27 @@ function angBetweenVecs( vec1, vec2, up )
 	end
 end
 
-function toAngleAxis( q )
+function toAngleAxis( q, fallbackAxis )
 	local ang, axis = cpml.quat.to_angle_axis( q )
 	if cpml.vec3.len( axis ) < 0.9999 then
-		axis = cpml.vec3(1,0,0)
+		axis = fallbackAxis or cpml.vec3(1,0,0)
 		ang = 0
 	end
 	return ang, axis
 end
 
-
+-- Deep copy a table:
+function deepcopy(orig)
+    local orig_type = type(orig)
+    local copy
+    if orig_type == 'table' then
+        copy = {}
+        for orig_key, orig_value in next, orig, nil do
+            copy[deepcopy(orig_key)] = deepcopy(orig_value)
+        end
+        setmetatable(copy, deepcopy(getmetatable(orig)))
+    else -- number, string, boolean, etc
+        copy = orig
+    end
+    return copy
+end

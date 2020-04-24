@@ -41,6 +41,17 @@ end
 
 function Skeleton:getDebugData( drawConstraints )
 	local data = {}
+	if self.debugChain then
+		for i,b in ipairs(self.debugChain) do
+			local boneData = b:getDebugData( drawConstraints )
+			for key, elem in pairs(boneData) do
+				elem.col[1] = elem.col[1]*0.5
+				elem.col[2] = elem.col[2]*2
+				elem.col[3] = elem.col[3]*0.5
+				table.insert( data, elem )
+			end
+		end
+	end
 	for b,t in pairs(self.bones) do
 		local boneData = b:getDebugData( drawConstraints )
 		for key, elem in pairs(boneData) do
@@ -48,6 +59,15 @@ function Skeleton:getDebugData( drawConstraints )
 		end
 	end
 	return data
+end
+
+function Skeleton:setDebugChain( chain )
+	self.debugChain = {}
+	for i,b in ipairs(chain) do
+		local bNew = b:clone()
+		local parent = self.debugChain[#self.debugChain]
+		table.insert( self.debugChain, bNew )
+	end
 end
 
 function test()

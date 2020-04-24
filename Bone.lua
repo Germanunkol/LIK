@@ -153,7 +153,7 @@ function Bone:setLocalRot( r, ignoreConstraint )
 		-- This is the new rotation:	
 		r = twist
 		-- Clamp this new rotation:
-		tAngle, tAxis = toAngleAxis( twist )
+		tAngle, tAxis = toAngleAxis( twist, self.constraint.axis )
 		-- Ensure that the rotation axis was not flipped:
 		if cpml.vec3.dist2( tAxis, self.constraint.axis ) > 0.5 then
 			tAxis = -tAxis
@@ -263,6 +263,13 @@ function Bone:getParentDir()
 	else
 		return cpml.vec3(1,0,0)
 	end
+end
+function Bone:clone()
+	local bNew = Bone:new( nil, self.parent, self.lPos, self.lRot, self.len )
+	if self.constraint then
+		bNew.constraint = deepcopy( self.constraint )
+	end
+	return bNew
 end
 
 function Bone:setConstraint( axis, minAng, maxAng )
