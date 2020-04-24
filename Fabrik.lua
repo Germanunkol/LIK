@@ -133,7 +133,7 @@ end
 
 function Fabrik.validateChain( chain )
 	local valid = true
-	local eps = math.pi*0.01
+	local eps = math.pi*0.001
 	for i, bone in ipairs(chain) do
 		-- Check that bone is within bounds with respect to parent:
 		if bone.constraint then

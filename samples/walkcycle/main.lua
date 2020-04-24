@@ -22,12 +22,12 @@ function createShortChain()
 
 	spine = { b1_0, b1_1, b1_2, b1_3, b1_4 }
 
-	b1_1:setConstraint( cpml.vec3(0,0,1), -math.pi*0.5, math.pi*0.5 )
+	--[[b1_1:setConstraint( cpml.vec3(0,0,1), -math.pi*0.5, math.pi*0.5 )
 	b1_0:setConstraint( cpml.vec3(0,0,1), -math.pi, -math.pi )
 	b1_1:setConstraint( cpml.vec3(0,0,1), -math.pi*0.9, math.pi*0.1 )
 	b1_2:setConstraint( cpml.vec3(0,0,1), -math.pi, -math.pi*0.1 )
 	b1_3:setConstraint( cpml.vec3(0,0,1), -math.pi*0.5, 0 )
-	b1_4:setConstraint( cpml.vec3(0,0,1), -math.pi*0.5, 0 )
+	b1_4:setConstraint( cpml.vec3(0,0,1), -math.pi*0.5, 0 )]]
 	return skel, spine
 end
 
@@ -54,6 +54,7 @@ end
 
 
 function love.load()
+	love.keyboard.setKeyRepeat( true )
 
 	skel1, spine1 = createShortChain()
 	skel2, spine2 = createShortChain()
@@ -66,15 +67,18 @@ function love.load()
 	showConstraints = false
 	speed = 0.5
 	baseX = 0
+	stepSize = 0.7
+	footRaise = 0.1
 end
 
 function love.update( dt )
+	if failed then
+		return
+	end
 	t = love.timer.getTime()
 
 	baseX = baseX + speed*dt
-	stepSize = 0.7
 
-	footRaise = 0.1
 
 	curStepPos = math.floor(baseX/stepSize)*stepSize + stepSize*0.5
 	stepPercentage = (baseX - math.floor(baseX/stepSize)*stepSize)/stepSize
@@ -152,7 +156,8 @@ function love.update( dt )
 
 	if Fabrik.validateChain( spine1 ) ~= true then
 		love.graphics.captureScreenshot( "debug.png" )
-		love.event.quit()
+		failed = true
+		--love.event.quit()
 	end
 	--Fabrik.solve( spine1, targetPos, targetDir, 3 )
 end
@@ -216,6 +221,11 @@ function love.draw()
 	love.graphics.circle( "fill", leftFootTargetPos.x, leftFootTargetPos.y, 0.02 )
 	local endPoint = leftFootTargetPos + targetDir*0.05
 	love.graphics.line( leftFootTargetPos.x, leftFootTargetPos.y, endPoint.x, endPoint.y )
+
+	love.graphics.setColor( 0.4,0.5,1,0.5 )
+	love.graphics.circle( "fill", rightFootTargetPos.x, rightFootTargetPos.y, 0.02 )
+	local endPoint = rightFootTargetPos + targetDir*0.05
+	love.graphics.line( rightFootTargetPos.x, rightFootTargetPos.y, endPoint.x, endPoint.y )
 	
 	--baseX = speed*t
 	-- Draw the floor:
@@ -255,23 +265,15 @@ function love.draw()
 
 	love.graphics.setColor(1,1,1,1)
 	love.graphics.print("FPS: "..tostring(love.timer.getFPS( )), 10, 10)
+	love.graphics.print("Speed: "..tostring(speed), 10, 25)
+	love.graphics.print("Step Size: "..tostring(stepSize), 10, 40)
+	love.graphics.print("Foot Raise: "..tostring(footRaise), 10, 55)
 end
 
 function getFloorHeight( x, y )
 	local noise = love.math.noise( x, y )
 	h = 0.25 + noise*0.3
 	return h
-end
-
-function getFootPlacement( baseX, ang, y )
-	raise = 0.1
-	len = 0.3
-
-	x = len*math.cos( ang )
-	floorPos = getFloorPos( baseX + x, y )
-
-	targetPos = floorPos + cpml.vec3( x, math.min(raise*math.sin( ang ),0), 0 )
-	return targetPos
 end
 
 function love.keypressed( key )
@@ -284,6 +286,14 @@ function love.keypressed( key )
 		speed = speed + 0.1
 	elseif key == "left" then
 		speed = speed - 0.1
+	elseif key == "j" then
+		stepSize = stepSize - 0.1
+	elseif key == "l" then
+		stepSize = stepSize + 0.1
+	elseif key == "i" then
+		footRaise = footRaise + 0.05
+	elseif key == "k" then
+		footRaise = footRaise - 0.05
 	end
 end
 

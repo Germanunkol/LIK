@@ -29,7 +29,13 @@ function swingTwistDecomposition( rotation, direction )
 end
 
 function rotBetweenVecs( vec1, vec2 )
-	local rAxis = cpml.vec3.cross( vec1, vec2 )
+	local rAxis = cpml.vec3.cross( cpml.vec3.normalize(vec1), cpml.vec3.normalize(vec2) )
+
+	-- Check if vectors were parallel:
+	if cpml.vec3.len2( rAxis ) == 0 then
+		return cpml.quat.from_angle_axis( 0, cpml.vec3(1,0,0 ) )
+	end
+
 	local w = math.sqrt((cpml.vec3.len(vec1) ^ 2) * (cpml.vec3.len(vec2) ^ 2)) + cpml.vec3.dot(vec1, vec2);
 	local q = cpml.quat( rAxis.x, rAxis.y, rAxis.z, w )
 	return cpml.quat.normalize( q )

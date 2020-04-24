@@ -60,13 +60,9 @@ end
 ]]
 function Bone:validatePosWRTChild( child )
 	-- Get rotation between my direction and the child direction:
-	print("validate")
 	local dir = self:getDir()
 	local childDir = child:getDir()
 	local rot = rotBetweenVecs( dir, childDir )
-	print(dir)
-	print(childDir)
-	print(toAngleAxis(rot))
 	-- Find component which rotates around the constraint axis (twist)
 	swing, twist = swingTwistDecomposition( rot, child.constraint.axis )
 	-- TODO: "Undo" any swing rotation here
@@ -147,39 +143,28 @@ end
 
 
 function Bone:setLocalRot( r, ignoreConstraint )
-	print("---------------")
 	local ang, axis = toAngleAxis( r )
 	local l = cpml.vec3.len( axis )
-	print(ang, axis, r)
 	assert( l > 0.0001, "Rotation axis invalid" )
 	if not ignoreConstraint and self.constraint ~= nil then
 		origAngle, origAxis = toAngleAxis( r )
-		print("orig", origAngle, origAxis, r)
 		-- Find component which rotates around the self constraint axis (twist)
 		swing, twist = swingTwistDecomposition( r, self.constraint.axis )
 		-- This is the new rotation:	
 		r = twist
-		print(twist)
 		-- Clamp this new rotation:
 		tAngle, tAxis = toAngleAxis( twist )
-		print("tAngle", tAngle, tAxis)
 		-- Ensure that the rotation axis was not flipped:
 		if cpml.vec3.dist2( tAxis, self.constraint.axis ) > 0.5 then
 			tAxis = -tAxis
 			tAngle = -tAngle
 		end
-		print("tAngleflip", tAngle, tAxis)
 		tAngle = angleRange( tAngle )
-		print("corr", tAngle)
-		print("limits", self.constraint.minAng, self.constraint.maxAng)
 		tAngleC = math.min(math.max(tAngle,self.constraint.minAng),self.constraint.maxAng)
-		print("limited", tAngleC, tAxis)
 		r = cpml.quat.from_angle_axis( tAngleC, tAxis )
 	end
-	print(toAngleAxis(r))
+	--print(toAngleAxis(r))
 	local l = cpml.quat.len(r)
-	print(l)
-	print(r)
 	assert( l > 0.999 and l < 1.0001, "Computed rotation not 1!")
 	self.lRot = r
 end
@@ -259,8 +244,6 @@ end
 -- Get vec pointing in the direction I'm currently facing
 function Bone:getDir()
 	local rot = self:getRot()
-	print("rot", toAngleAxis(rot))
-	print("lRot", toAngleAxis(self.lRot))
 	return cpml.quat.mul_vec3( rot, cpml.vec3(1,0,0) )
 end
 -- Get vec pointing in the direction I would be facing if I had no (local) rotation.
