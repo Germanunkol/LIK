@@ -77,7 +77,8 @@ function love.update( dt )
 	end
 	t = love.timer.getTime()
 
-	baseX = baseX + speed*dt
+	--baseX = baseX + speed*dt
+	baseX = baseX + speed*0.005
 
 
 	curStepPos = math.floor(baseX/stepSize)*stepSize + stepSize*0.5
@@ -162,7 +163,7 @@ function love.update( dt )
 
 	if Fabrik.validateChain( spine1 ) ~= true then
 		love.graphics.captureScreenshot( "debug.png" )
-		failed = true
+		--failed = true
 		--love.event.quit()
 	end
 	--Fabrik.solve( spine1, targetPos, targetDir, 3 )

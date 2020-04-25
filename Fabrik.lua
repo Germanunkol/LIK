@@ -14,9 +14,9 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 	for i=1,maxIterations do
 
 		-- Store bone offsets:
-		local lPos = {}
+		local len = {}
 		for j,b in ipairs(chain) do
-			lPos[b] = b.lPos
+			len[b] = cpml.vec3.len( b.lPos )
 		end
 		
 		-- Forward pass:
@@ -30,15 +30,21 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 			local r = rotBetweenVecs( cpml.vec3(1,0,0), dirFromParent )
 			chain[#chain]:setRot( r )
 		end
+
+		print("Forward:")
+			
 		-- DEBUG: 2
 		for j=#chain-1,1,-1 do
+			print("BONE ", j)
 			local curBone = chain[j]
 			local curChild = chain[j+1]
 			local curPos = curBone:getPos()
 			local curChildPos = curChild:getPos()
 
+			print("1", curBone:getRot():to_angle_axis())
+
 			-- Get the current offset between the curBone and the child bone:
-			local curLen = cpml.vec3.len( lPos[curChild] )
+			local curLen = len[curChild]
 			local curDiff = cpml.vec3.normalize(curPos - curChildPos)
 			if cpml.vec3.len( curDiff ) == 0 then
 				curDiff = cpml.vec3(1,0,0)
@@ -47,14 +53,19 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 
 			curBone:setPosFixedChild( newPos, curChild )
 
+			--if j == 1 and love.keyboard.isDown("t") then return false end
 			-- If my child has a constraint, abide by it:
 			if curChild.constraint then
 				curBone:validatePosWRTChild( curChild )
 			else
 				-- Just rotate towards the child:
 				local dirToChild = cpml.vec3.normalize( curChildPos - curPos )
-				local r = rotBetweenVecs( cpml.vec3(1,0,0), dirToChild )
-				curBone:setRotFixedChild( r, curChild )
+				local fallbackAxis = nil
+				if curBone.constraint then
+					fallbackAxis = curBone.constraint.axis -- TODO: To global axis?
+				end
+				local r = rotBetweenVecs( cpml.vec3(1,0,0), dirToChild, fallbackAxis )
+				curBone:setRotFixedChild( r, curChild, true )
 			end
 			--if not curChild.constraint then	
 				--local dirToChild = cpml.vec3.normalize( curChildPos - curPos )
@@ -65,23 +76,19 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 				--curBone:validatePosWRTChild( curChild )
 			--end
 
-			print("forward", j)
-			if not Fabrik.validateBone( curChild, j ) then
-				return false
-			end
 			--if not Fabrik.validateChain( chain ) then
 				--return false
 			--end
 		end
 
-		--if love.keyboard.isDown("t") then
-			--return
-		--end
-
 		-- Backward pass:
 		chain[1]:setPosFixedChild( rootPos, chain[2] )
 		chain[1]:setLocalRotFixedChild( chain[1].lRot, chain[2] )
+
+		print("backward:")
+
 		for j=2,#chain do
+			print("BONE ", j)
 			--if j>2 then return end
 			local curBone = chain[j]
 			local curParent = chain[j-1]
@@ -89,45 +96,56 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 			local curParentPos = curParent:getPos()
 			local curChild = chain[j+1]
 
-			local curLen = cpml.vec3.len( lPos[curBone] )
+			local curLen = len[curBone]
 			local curDiff = cpml.vec3.normalize(curPos - curParentPos)
 			if cpml.vec3.len( curDiff ) == 0 then
 				curDiff = cpml.vec3(-1,0,0)
 			end
 			local newPos = curDiff*curLen + curParentPos
 
+			print("4", curBone:getRot():to_angle_axis())
+
 			if curChild then
-				curBone:setPosFixedChild( newPos, chain[j+1] )
+				curBone:setPosFixedChild( newPos, curChild )
 			else
 				curBone:setPos( newPos )
 			end
+
+			print("5", curBone:getRot():to_angle_axis())
 
 			-- If my parent has a constraint, abide by it:
 			if curParent.constraint then
 				curBone:validatePosWRTParent( chain[j+1] )
 			end
-			print("backward2", j)
-			if not Fabrik.validateBone( curBone, j ) then
-				return false
-			end
-			--if i == 1 then
 
-			local dirFromParent = cpml.vec3.normalize(
-					curBone:getPos() - curParent:getPos() )
-			local r = rotBetweenVecs( cpml.vec3(1,0,0), dirFromParent )
-			curParent:setRotFixedChild( r, curBone )
+			print("6", curBone:getRot():to_angle_axis())
+
+			-- Ensure the parent is facing me:
+			local foundRot = curParent:findRotationTo( curBone:getPos() )
+			curParent:setRotFixedChild( foundRot, curBone, true )
+			--if true then return false end
+
+			if j == 3 and love.keyboard.isDown("t") then return end
+
+			print("7", curBone:getRot():to_angle_axis())
 
 			-- Ensure the constraints are still valid by rotating myself:
 			if curChild then
-				curBone:setLocalRotFixedChild( curBone.lRot, chain[j+1] )
+				print("child")
+				print( curBone.lRot:to_angle_axis() )
+				curBone:setLocalRotFixedChild( curBone.lRot, curChild )
 			else
 				curBone:setLocalRot( curBone.lRot )
 			end
-		
-			print("backward3", j)
-			if not Fabrik.validateBone( curBone, j ) then
-				return false
+
+			print("8", curBone:getRot():to_angle_axis())
+			print("constraint", curBone.constraint)
+
+			for c,b in ipairs(chain) do
+				print(c,b,b:getPos(),cpml.quat.to_angle_axis(b:getRot()))
 			end
+
+
 		end
 
 	end
