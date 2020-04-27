@@ -16,13 +16,13 @@ function createShortChain()
 
 	local b1_0 = Bone:new( skel, nil, vZero, noRot, 0.1 )
 	local b1_1 = Bone:new( skel, b1_0, cpml.vec3(0.1,0,0), noRot, 0.2 )
-	local b1_2 = Bone:new( skel, b1_1, cpml.vec3(0.2,0,0), noRot, 0.3 )
+	--local b1_2 = Bone:new( skel, b1_1, cpml.vec3(0.2,0,0), noRot, 0.3 )
 	--local b1_3 = Bone:new( skel, b1_2, cpml.vec3(0.2,0,0), cpml.quat(), 0.07 )
 	--local b1_4 = Bone:new( skel, b1_3, cpml.vec3(0.07,0,0), cpml.quat(), 0.03 )
 
-	spine = { b1_0, b1_1, b1_2 }
+	spine = { b1_0, b1_1 }
 
-	b1_0:setConstraint( cpml.vec3(0,0,1), -math.pi,-math.pi )
+	b1_0:setConstraint( cpml.vec3(0,0,1), -math.pi*0.5, math.pi*0.5 )
 	b1_1:setConstraint( cpml.vec3(0,0,1), -math.pi*0.5, math.pi*0.5 )
 	--b1_2:setConstraint( cpml.vec3(0,0,1), -math.pi*0.25, math.pi*0.25 )
 	--b1_3:setConstraint( cpml.vec3(0,0,1), -math.pi*0.5, 0 )
@@ -175,11 +175,16 @@ function love.keypressed( key, code, isrepeat )
 
 		skel.pos = cpml.vec3( baseX, 0, 0 )
 
-		Fabrik.solve( spine, targetPosLocal, targetDirLocal, 10 )
+		Fabrik.solve( spine, targetPosLocal, targetDirLocal, 1 )
 		--Fabrik.solve( spine, targetPosLocal, nil, 20 )
 		prevTargetPos = targetPos
 		prevTargetDir = targetDir
 		prevTargetPos.x = prevTargetPos.x - baseX
+
+		--[[for i,b in ipairs(spine) do
+			b:correctPos()
+			b:correctRot()
+		end]]
 
 		if Fabrik.validateChain( spine ) ~= true then
 			love.graphics.captureScreenshot( "debug.png" )

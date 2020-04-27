@@ -7,163 +7,63 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 
 	rootPos = chain[1]:getPos()
 
-	debugSteps = debugSteps or math.huge
-	--maxIterations = 1
-	--chain[1].skeleton:setDebugChain( chain )
+	local lenCache = {}
+	for j,b in ipairs(chain) do
+		lenCache[j] = b.len
+	end
 
 	for i=1,maxIterations do
 
-		-- Store bone offsets:
-		local len = {}
-		for j,b in ipairs(chain) do
-			len[b] = cpml.vec3.len( b.lPos )
-		end
-		
-		-- Forward pass:
+		--------------------------------------------
+		-- Forward reaching pass:
 		chain[#chain]:setPos( targetPos )
-		if targetDir then
-			targetRot = rotBetweenVecs( cpml.vec3(1,0,0), targetDir )
-			chain[#chain]:setRot( targetRot, true )
-		else
-		-- Just rotate towards the child:
-			local dirFromParent = cpml.vec3.normalize( targetPos - chain[#chain-1]:getPos() )
-			local r = rotBetweenVecs( cpml.vec3(1,0,0), dirFromParent )
-			chain[#chain]:setRot( r )
-		end
+		local targetRot = rotBetweenVecs( cpml.vec3(1,0,0), targetDir )
+		chain[#chain]:setRot( targetRot, true )
 
-		print("Forward:")
-			
-		-- DEBUG: 2
+
+		print("Forward reaching pass")
 		for j=#chain-1,1,-1 do
-			print("BONE ", j)
 			local curBone = chain[j]
 			local curChild = chain[j+1]
 			local curPos = curBone:getPos()
 			local curChildPos = curChild:getPos()
-
-			print("1", curBone:getRot():to_angle_axis())
-
-			-- Get the current offset between the curBone and the child bone:
-			local curLen = len[curChild]
-			local curDiff = cpml.vec3.normalize(curPos - curChildPos)
-			if cpml.vec3.len( curDiff ) == 0 then
-				curDiff = cpml.vec3(1,0,0)
+	
+			local diff = (curPos - curChildPos):normalize()
+			if diff:len() == 0 then
+				diff = cpml.vec3(1,0,0)
 			end
-			local newPos = curDiff*curLen + curChildPos
+			local newPos = curChildPos + diff*curBone.len
 
 			curBone:setPosFixedChild( newPos, curChild )
 
-			--if j == 1 and love.keyboard.isDown("t") then return false end
-			-- If my child has a constraint, abide by it:
-			if curChild.constraint then
-				curBone:validatePosWRTChild( curChild )
-			else
-				-- Just rotate towards the child:
-				local dirToChild = cpml.vec3.normalize( curChildPos - curPos )
-				local fallbackAxis = nil
-				if curBone.constraint then
-					fallbackAxis = curBone.constraint.axis -- TODO: To global axis?
-				end
-				local r = rotBetweenVecs( cpml.vec3(1,0,0), dirToChild, fallbackAxis )
-				curBone:setRotFixedChild( r, curChild, true )
-			end
-			--if not curChild.constraint then	
-				--local dirToChild = cpml.vec3.normalize( curChildPos - curPos )
-				--local r = rotBetweenVecs( cpml.vec3(1,0,0), dirToChild )
-				--curBone:setRotFixedChild( r, curChild )
-			-- If I do have a constraint, ensure my position is valid (if child is fixed)
-			--else
-				--curBone:validatePosWRTChild( curChild )
-			--end
+			-- Check what the pose of the child currently is...
+			local posBeforeValidation = curChild:getPos()
+			local rotBeforeValidation = curChild:getRot()
+			-- ... and check what would be a valid pose:
+			local rotAfterValidation = curChild:getValidRot()
+			local posAfterValidation = curChild:getValidPos()
+			if love.keyboard.isDown("t") then return end
 
-			--if not Fabrik.validateChain( chain ) then
-				--return false
-			--end
+			--local posAfterValidation = curChild:getPos()
+			--local rotAfterValidation = curChild:getRot()
+			--curChild:setPos( posBeforeValidation )
+			--curChild:setRot( rotBeforeValidation )
+			local relRot = rotAfterValidation:inverse() * rotBeforeValidation
+			local relPos = posBeforeValidation - posAfterValidation
+			print("relPos:", relPos)
+			
+			curBone:setPosFixedChild( curBone:getPos() + relPos, curChild )
+			--[[curBone:setRotFixedChild( relRot, curChild )
+			curBone:setPosFixedChild( relPos, curChild )]]
+
+			print(j, curBone.lRot:to_angle_axis() )
 		end
 
-		-- Backward pass:
-		chain[1]:setPosFixedChild( rootPos, chain[2] )
-		chain[1]:setLocalRotFixedChild( chain[1].lRot, chain[2] )
+		
 
-		print("backward:")
-
-		for j=2,#chain do
-			print("BONE ", j)
-			--if j>2 then return end
-			local curBone = chain[j]
-			local curParent = chain[j-1]
-			local curPos = curBone:getPos()
-			local curParentPos = curParent:getPos()
-			local curChild = chain[j+1]
-
-			local curLen = len[curBone]
-			local curDiff = cpml.vec3.normalize(curPos - curParentPos)
-			if cpml.vec3.len( curDiff ) == 0 then
-				curDiff = cpml.vec3(-1,0,0)
-			end
-			local newPos = curDiff*curLen + curParentPos
-
-			print("4", curBone:getRot():to_angle_axis())
-
-			if curChild then
-				curBone:setPosFixedChild( newPos, curChild )
-			else
-				curBone:setPos( newPos )
-			end
-
-			print("5", curBone:getRot():to_angle_axis())
-
-			-- If my parent has a constraint, abide by it:
-			if curParent.constraint then
-				curBone:validatePosWRTParent( chain[j+1] )
-			end
-
-			print("6", curBone:getRot():to_angle_axis())
-
-			-- Ensure the parent is facing me:
-			local foundRot = curParent:findRotationTo( curBone:getPos() )
-			curParent:setRotFixedChild( foundRot, curBone, true )
-			--if true then return false end
-
-			if j == 3 and love.keyboard.isDown("t") then return end
-
-			print("7", curBone:getRot():to_angle_axis())
-
-			-- Ensure the constraints are still valid by rotating myself:
-			if curChild then
-				print("child")
-				print( curBone.lRot:to_angle_axis() )
-				curBone:setLocalRotFixedChild( curBone.lRot, curChild )
-			else
-				curBone:setLocalRot( curBone.lRot )
-			end
-
-			print("8", curBone:getRot():to_angle_axis())
-			print("constraint", curBone.constraint)
-
-			for c,b in ipairs(chain) do
-				print(c,b,b:getPos(),cpml.quat.to_angle_axis(b:getRot()))
-			end
-
-
-		end
-
+		
+		--print("Backward reaching pass")
 	end
-
-	--[[for j,b in ipairs( chain ) do
-		-- Let last element point towards target:
-		if j == #chain then
-			--local dir = cpml.vec3.normalize( targetPos - b:getPos() )
-			--local r = rotBetweenVecs( cpml.vec3(1,0,0), dir )
-			--b:setRot( r )
-		-- Let other elements point towards their child:
-		else
-			local child = chain[j+1]
-			local dir = cpml.vec3.normalize( child:getPos() - b:getPos() )
-			local r = rotBetweenVecs( cpml.vec3(1,0,0), dir )
-			b:setRotFixedChild( r, child )
-		end
-	end]]
 	return true
 end
 

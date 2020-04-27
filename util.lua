@@ -1,5 +1,7 @@
 local cpml = require("lib.cpml")
 
+local eps = 1e-10
+
 -- Rotate and angle by 2*pi until it's in the -pi to +pi range:
 function angleRange( v )
 	while v < -math.pi do
@@ -20,12 +22,22 @@ function swingTwistDecomposition( rotation, direction )
 	local rAxis = cpml.vec3( rotation.x, rotation.y, rotation.z )
 	local proj = direction*cpml.vec3.dot( rAxis, direction )
 	local twist = cpml.quat( proj.x, proj.y, proj.z, rotation.w )
-	if cpml.quat.len(twist) < 1e-9 then
+	if cpml.quat.len(twist) < 1e-10 then
 		twist = rotation
 	end
 	local twist = cpml.quat.normalize( twist )
 	local swing = rotation * cpml.quat.conjugate( twist )
 	return swing, twist
+end
+
+function getTwist( rotation, direction )
+	local swing, twist = swingTwistDecomposition( rotation, direction )
+	local tAng, tAx = cpml.quat.to_angle_axis( twist )
+	if cpml.vec3.dist2( tAx, direction ) > 0.5 then
+		tAx = -tAx
+		tAng = -tAng
+	end
+	return tAng, tAx
 end
 
 function findPerpendicular( vec )
@@ -42,6 +54,10 @@ function findPerpendicular( vec )
 	end
 	return p
 	--return cpml.vec3.normalize( p )
+end
+
+function projToPlane( pos, pNormal, pOrig )
+	return pos - pNormal * cpml.vec3.dot( pNormal, pos - pOrig )
 end
 
 function rotBetweenVecs( vec1, vec2, fallbackAxis )
@@ -70,18 +86,26 @@ function rotBetweenVecs( vec1, vec2, fallbackAxis )
 end
 
 function angBetweenVecs( vec1, vec2, up )
+	print("Ang between vecs")
 	local l1 = cpml.vec3.len( vec1 )
 	local l2 = cpml.vec3.len( vec2 )
+	print("lengths:", l1,l2)
 	local ang = math.acos( cpml.vec3.dot( vec1,vec2 )/(l1*l2) )
+	print("ang:", ang)
 	-- If no "up" direction is given, simply return the angle (will always be positive)
 	if up == nil then
+		print("no up")
 		return ang
 	end
 	local cross = cpml.vec3.cross( vec1, vec2 )
+	print("cross:", cross, "up", up)
 	-- Check if the cross product is "facing upwards" or "downwards":
-	if cpml.vec3.dist( up, cross ) < cpml.vec3.dist( up, -cross ) then
+	print("dists:", cpml.vec3.dist2( up, cross ), cpml.vec3.dist2( up, -cross ) )
+	if cpml.vec3.dist2( up, cross ) > cpml.vec3.dist2( up, -cross ) then
+		print("switch!:", -ang)
 		return -ang
 	else
+		print("no switch!:", ang)
 		return ang
 	end
 end
@@ -113,11 +137,10 @@ end
 
 function test()
 	print("Testing angBetweenVecs...")
-	eps = 1e-10
 	for i=0,100 do
 		ang = math.cos(i/100*2*math.pi)
 		vec = cpml.vec3( math.cos(ang), math.sin(ang), 0 )
-		dAng = angBetweenVecs( cpml.vec3(1,0,0), vec, cpml.vec3(0,0,-1) )
+		dAng = angBetweenVecs( cpml.vec3(1,0,0), vec, cpml.vec3(0,0,1) )
 		--print(ang, dAng, vec)
 		assert( ang < dAng + eps and ang > dAng - eps, "Invalid angBetweenVecs " .. ang .. " " .. dAng .. " " .. tostring(vec) )
 	end
