@@ -39,15 +39,15 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 			-- Check what the pose of the child currently is...
 			local posBeforeValidation = curChild:getPos()
 			local rotBeforeValidation = curChild:getRot()
-			-- ... and check what would be a valid pose:
-			local rotAfterValidation = curChild:getValidRot()
-			local posAfterValidation = curChild:getValidPos()
+			-- ... and fix if necessary:
+			curChild:correctRot()
+			curChild:correctPos()
 			if love.keyboard.isDown("t") then return end
 
-			--local posAfterValidation = curChild:getPos()
-			--local rotAfterValidation = curChild:getRot()
-			--curChild:setPos( posBeforeValidation )
-			--curChild:setRot( rotBeforeValidation )
+			local posAfterValidation = curChild:getPos()
+			local rotAfterValidation = curChild:getRot()
+			curChild:setPos( posBeforeValidation )
+			curChild:setRot( rotBeforeValidation )
 			local relRot = rotAfterValidation:inverse() * rotBeforeValidation
 			local relPos = posBeforeValidation - posAfterValidation
 			print("relPos:", relPos)

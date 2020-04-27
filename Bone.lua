@@ -129,32 +129,27 @@ function Bone:clone()
 	return bNew
 end
 
-function Bone:getValidRot()
+function Bone:correctRot()
 	if self.constraint then
 		-- Get component of local rotation around my constraint axis (twist).
 		-- Ignore the rest (swing).
 		local oAng, oAx = self.lRot:to_angle_axis()
 		local tAng, tAx = getTwist( self.lRot, self.constraint.axis )
-		local newRot
+		--local newRot
 		if tAng < self.constraint.minAng - eps then
-			--self:setLocalRot( self.constraint.minRot )
-			newRot = self.constraint.minRot
+			self:setLocalRot( self.constraint.minRot )
+			--newRot = self.constraint.minRot
 		elseif tAng > self.constraint.maxAng + eps then
-			--self:setLocalRot( self.constraint.maxRot )
-			newRot = self.constraint.maxRot
+			self:setLocalRot( self.constraint.maxRot )
+			--newRot = self.constraint.maxRot
 		else
-			--self:setLocalRot( cpml.quat.from_angle_axis( tAng, self.constraint.axis ) )
-			newRot = cpml.quat.from_angle_axis( tAng, self.constraint.axis )
-		end
-		if self.parent then
-			return self.parent:toGlobalRot( newRot )
-		else
-			return newRot
+			self:setLocalRot( cpml.quat.from_angle_axis( tAng, self.constraint.axis ) )
+			--newRot = cpml.quat.from_angle_axis( tAng, self.constraint.axis )
 		end
 	end
 end
 
-function Bone:getValidPos()
+function Bone:correctPos()
 	-- If I don't have a parent, any position is valid.
 	if self.parent then
 		if self.parent.constraint then
@@ -172,31 +167,31 @@ function Bone:getValidPos()
 			if ang < self.parent.constraint.minAng then
 				local newPos = self.parent.constraint.minDir * self.parent.len
 				-- Correct parent to look at me:
-				--self.parent:setLocalRot( self.parent.constraint.minRot )
+				self.parent:setLocalRot( self.parent.constraint.minRot )
 				local newPosRot = self.parent.lRot:inverse() * newPos
-				--self:setLocalPos( newPosRot )
-				return self.parent:toGlobalPos( newPosRot )
+				self:setLocalPos( newPosRot )
+				--return self.parent:toGlobalPos( newPosRot )
 			elseif ang > self.parent.constraint.maxAng then
 				local newPos = self.parent.constraint.maxDir * self.parent.len
 				-- Correct parent to look at me:
-				--self.parent:setLocalRot( self.parent.constraint.maxRot )
+				self.parent:setLocalRot( self.parent.constraint.maxRot )
 				local newPosRot = self.parent.lRot:inverse() * newPos
-				return self.parent:toGlobalPos( newPosRot )
-				--self:setLocalPos( newPosRot )
+				self:setLocalPos( newPosRot )
+				--return self.parent:toGlobalPos( newPosRot )
 			else
 				-- Correct parent to look at me:
 				local newParentRot = cpml.quat.from_angle_axis( ang,
 					self.parent.constraint.axis )
-				--self.parent:setLocalRot( newParentRot )
+				self.parent:setLocalRot( newParentRot )
 				-- Ensure the bone is the correct length from the parent:
 				local newPos = proj:normalize() * self.parent.len
 				local newPosRot = self.parent.lRot:inverse() * newPos
-				return self.parent:toGlobalPos( newPosRot )
-				--self:setLocalPos( newPosRot )
+				self:setLocalPos( newPosRot )
+				--return self.parent:toGlobalPos( newPosRot )
 			end
 		end
 	end
-	return self.lPos
+	--return self.lPos
 end
 
 function Bone:setConstraint( axis, minAng, maxAng )
