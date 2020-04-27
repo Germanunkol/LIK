@@ -86,26 +86,18 @@ function rotBetweenVecs( vec1, vec2, fallbackAxis )
 end
 
 function angBetweenVecs( vec1, vec2, up )
-	print("Ang between vecs")
 	local l1 = cpml.vec3.len( vec1 )
 	local l2 = cpml.vec3.len( vec2 )
-	print("lengths:", l1,l2)
 	local ang = math.acos( cpml.vec3.dot( vec1,vec2 )/(l1*l2) )
-	print("ang:", ang)
 	-- If no "up" direction is given, simply return the angle (will always be positive)
 	if up == nil then
-		print("no up")
 		return ang
 	end
 	local cross = cpml.vec3.cross( vec1, vec2 )
-	print("cross:", cross, "up", up)
 	-- Check if the cross product is "facing upwards" or "downwards":
-	print("dists:", cpml.vec3.dist2( up, cross ), cpml.vec3.dist2( up, -cross ) )
 	if cpml.vec3.dist2( up, cross ) > cpml.vec3.dist2( up, -cross ) then
-		print("switch!:", -ang)
 		return -ang
 	else
-		print("no switch!:", ang)
 		return ang
 	end
 end

@@ -36,7 +36,7 @@ function love.load()
 
 	skel, spine = createShortChain()
 
-	targetDir = cpml.vec3(0,1,0)
+	targetDir = cpml.vec3(-1,0,0)
 
 	cursorX, cursorY = -0.4,0
 
@@ -53,7 +53,6 @@ function love.update( dt )
 	basePos = cpml.vec3( baseX, 0, 0 )
 
 	targetPos = basePos + cpml.vec3( cursorX, cursorY, 0 )
-	targetDir = cpml.vec3( 1,0,0 )
 
 	targetPosLocal = skel:toLocalPos( targetPos )
 	targetDirLocal = skel:toLocalDir( targetDir )

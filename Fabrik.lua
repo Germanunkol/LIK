@@ -16,12 +16,12 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 
 		--------------------------------------------
 		-- Forward reaching pass:
+		print("Forward reaching pass")
+
 		chain[#chain]:setPos( targetPos )
 		local targetRot = rotBetweenVecs( cpml.vec3(1,0,0), targetDir )
 		chain[#chain]:setRot( targetRot, true )
 
-
-		print("Forward reaching pass")
 		for j=#chain-1,1,-1 do
 			local curBone = chain[j]
 			local curChild = chain[j+1]
@@ -35,33 +35,36 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 			local newPos = curChildPos + diff*curBone.len
 
 			curBone:setPosFixedChild( newPos, curChild )
+			if love.keyboard.isDown("1") then return end
 
 			-- Check what the pose of the child currently is...
 			local posBeforeValidation = curChild:getPos()
 			local rotBeforeValidation = curChild:getRot()
 			-- ... and fix if necessary:
 			curChild:correctRot()
+			print(curChild.lRot:to_angle_axis())
+			if love.keyboard.isDown("2") then return end
 			curChild:correctPos()
-			if love.keyboard.isDown("t") then return end
+			if love.keyboard.isDown("3") then return end
 
 			local posAfterValidation = curChild:getPos()
 			local rotAfterValidation = curChild:getRot()
-			curChild:setPos( posBeforeValidation )
-			curChild:setRot( rotBeforeValidation )
-			local relRot = rotAfterValidation:inverse() * rotBeforeValidation
-			local relPos = posBeforeValidation - posAfterValidation
-			print("relPos:", relPos)
+			local undoMovement = posBeforeValidation - posAfterValidation
+			print(undoMovement)
+			curBone:setPos( curBone:getPos() + undoMovement )
+			local undoRotation = rotBeforeValidation * rotAfterValidation:inverse()
+			curBone:setRot( curBone:getRot()*undoRotation )
+			--curChild:setPos( posBeforeValidation )
+			--curChild:setRot( rotBeforeValidation )
 			
-			curBone:setPosFixedChild( curBone:getPos() + relPos, curChild )
-			--[[curBone:setRotFixedChild( relRot, curChild )
-			curBone:setPosFixedChild( relPos, curChild )]]
+			-- Simply "undo" the rotation/translation to both child _and also the parent_.
 
-			print(j, curBone.lRot:to_angle_axis() )
 		end
 
 		
 
-		
+		--------------------------------------------
+		-- Backward reaching pass:
 		--print("Backward reaching pass")
 	end
 	return true
