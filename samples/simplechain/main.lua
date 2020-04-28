@@ -36,7 +36,7 @@ function love.load()
 
 	skel, spine = createShortChain()
 
-	targetDir = cpml.vec3(1,0,0)
+	targetDir = cpml.vec3(-1,0,0)
 
 	cursorX, cursorY = -0.4,0
 
@@ -52,9 +52,9 @@ function love.update( dt )
 
 	basePos = cpml.vec3( baseX, 0, 0 )
 
-	--cursorX = math.sin( t )*0.5
-	--cursorY = math.cos( 1.6*t + 0.7 )*0.5
-	--targetDir = cpml.quat.from_angle_axis( t*0.5, cpml.vec3(0,0,1) ):mul_vec3( cpml.vec3(1,0,0) )
+	cursorX = math.sin( t )*0.5
+	cursorY = math.cos( 1.6*t + 0.7 )*0.5
+	targetDir = cpml.quat.from_angle_axis( t*0.5, cpml.vec3(0,0,1) ):mul_vec3( cpml.vec3(1,0,0) )
 
 	targetPos = basePos + cpml.vec3( cursorX, cursorY, 0 )
 
@@ -65,7 +65,7 @@ function love.update( dt )
 	--floorPos = floorPos + cpml.vec3( 0, 0.1*math.cos(t*0.1), 0 )
 	skel.pos = cpml.vec3( baseX, 0, 0 )
 
-	--Fabrik.solve( spine, targetPosLocal, targetDirLocal, 1 )
+	Fabrik.solve( spine, targetPosLocal, targetDirLocal, 1 )
 	
 end
 

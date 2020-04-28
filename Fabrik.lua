@@ -69,12 +69,39 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 
 		end
 
-		chain[1]:setPos( rootPos )
-		chain[1]:setLocalRot( chain[1].lRot )
 
 		--------------------------------------------
 		-- Backward reaching pass:
-		--print("Backward reaching pass")
+		print("Backward reaching pass")
+		
+		-- Move root bone back to original position:
+		chain[1]:setPosFixedChild( rootPos, chain[2] )
+		-- Ensure root bone is within valid bounds:
+		chain[1]:correctRot( chain[2] )
+
+		for j=2,#chain do
+			local curBone = chain[j]
+			local curParent = chain[j-1]
+			local curPos = curBone:getPos()
+			local curParentPos = curParent:getPos()
+			local curChild = chain[j+1]
+	
+			local diff = (curPos - curParentPos):normalize()
+			if diff:len() == 0 then
+				diff = cpml.vec3(1,0,0)
+			end
+			local newPos = curParentPos + diff*curBone.len
+		
+			if curChild then
+				curBone:setPosFixedChild( newPos, curChild )
+			else
+				curBone:setPos( newPos )
+			end
+
+			curBone:correctRot()
+			curBone:correctPos()
+
+		end
 	end
 	return true
 end
