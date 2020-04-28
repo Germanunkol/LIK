@@ -24,6 +24,7 @@ function Bone:setLocalPos( p )
 	self.lPos = p
 end
 function Bone:setLocalRot( r )
+	r = r:normalize()
 	self.lRot = r
 end
 

@@ -20,10 +20,10 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 		print("Forward reaching pass")
 
 
-		endEffector:setPos( targetPos )
+		chain[#chain]:setPos( targetPos )
 		local targetRot = rotBetweenVecs( cpml.vec3(1,0,0), targetDir,
-			endEffector.constraint and endEffector.constraint.axis or nil )
-		endEffector:setRot( targetRot, true )
+			chain[#chain].constraint and chain[#chain].constraint.axis or nil )
+		chain[#chain]:setRot( targetRot, true )
 
 		for j=#chain-1,1,-1 do
 			local curBone = chain[j]
@@ -69,7 +69,8 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 
 		end
 
-		
+		chain[1]:setPos( rootPos )
+		chain[1]:setLocalRot( chain[1].lRot )
 
 		--------------------------------------------
 		-- Backward reaching pass:
