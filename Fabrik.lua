@@ -19,7 +19,6 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 		-- Forward reaching pass:
 		print("Forward reaching pass")
 
-
 		chain[#chain]:setPos( targetPos )
 		local targetRot = rotBetweenVecs( cpml.vec3(1,0,0), targetDir,
 			chain[#chain].constraint and chain[#chain].constraint.axis or nil )
@@ -45,7 +44,6 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 			local rotBeforeValidation = curChild:getRot()
 			-- ... and fix if necessary:
 			curChild:correctRot()
-			print(curChild.lRot:to_angle_axis())
 			if love.keyboard.isDown("2") then return end
 			curChild:correctPos()
 			if love.keyboard.isDown("3") then return end
@@ -54,10 +52,6 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 			local rotAfterValidation = curChild:getRot()
 			local undoMovement = posBeforeValidation - posAfterValidation
 			local undoRotation = rotBeforeValidation * rotAfterValidation:inverse()
-			print(undoMovement)
-			print("rot before", rotBeforeValidation:to_angle_axis())
-			print("rot after", rotAfterValidation:to_angle_axis())
-			print(undoRotation:to_angle_axis())
 			if love.keyboard.isDown("4") then return end
 			--curBone:setRot( curBone:getRot()*undoRotation )
 			curBone:rotateAroundPoint( curChild:getPos(), undoRotation )

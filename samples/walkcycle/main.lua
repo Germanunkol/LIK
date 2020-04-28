@@ -30,28 +30,6 @@ function createShortChain()
 	return skel, spine
 end
 
-function createLongChain()
-	local vZero = cpml.vec3(0,0,0)
-	local skel = Skeleton:new()
-	spine = {}
-
-	local segLen = 0.05
-	local b = Bone:new( skel, nil, vZero, cpml.quat(), segLen )
-	b:setConstraint( cpml.vec3(0,0,1), 0.5*math.pi, 0.5*math.pi )
-	table.insert(spine, b)
-
-	for i=1,10 do
-		b = Bone:new( skel, b, cpml.vec3(segLen,0,0), cpml.quat(), segLen )
-		--if i < 10 then
-			b:setConstraint( cpml.vec3(0,0,1), -math.pi*0.3, math.pi*0.3 )
-		--end
-		table.insert(spine, b)
-	end
-
-	return skel, spine
-end
-
-
 function love.load()
 	love.keyboard.setKeyRepeat( true )
 

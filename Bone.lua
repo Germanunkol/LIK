@@ -178,7 +178,6 @@ function Bone:correctPos()
 			-- Then, find out the angle between the vec connecting the bones and the
 			-- parent's base vec:
 			local ang = angBetweenVecs( cpml.vec3(1,0,0),proj,self.parent.constraint.axis )
-			print("ang", ang, self.parent.constraint.minAng, self.parent.constraint.maxAng)
 			if ang < self.parent.constraint.minAng then
 				local newPos = self.parent.constraint.minDir * self.parent.len
 				-- Correct parent to look at me:
