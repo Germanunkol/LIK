@@ -38,7 +38,7 @@ function love.load()
 
 	targetDir = cpml.vec3(-1,0,0)
 
-	cursorX, cursorY = -0.4,0
+	cursorX, cursorY = 0.4,0
 
 	love.keyboard.setKeyRepeat( true )
 end

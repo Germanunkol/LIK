@@ -84,6 +84,14 @@ function Bone:getRot()
 	return rot
 end
 
+function Bone:rotateAroundPoint( point, rot )
+	self:setPos( self:getPos() - point )
+	local p = self:getPos()
+	local pRot = rot:mul_vec3( p )
+	self:setPos( pRot + point )
+	self:setRot( self:getRot()*rot )
+end
+
 function Bone:setRot( r, ignoreConstraint )
 	if self.parent then
 		local pRot = self.parent:getRot()

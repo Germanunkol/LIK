@@ -5,7 +5,8 @@ Fabrik = {}
 
 function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 
-	rootPos = chain[1]:getPos()
+	local rootPos = chain[1]:getPos()
+	local endEffector = chain[#chain]
 
 	local lenCache = {}
 	for j,b in ipairs(chain) do
@@ -18,9 +19,11 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 		-- Forward reaching pass:
 		print("Forward reaching pass")
 
-		chain[#chain]:setPos( targetPos )
-		local targetRot = rotBetweenVecs( cpml.vec3(1,0,0), targetDir )
-		chain[#chain]:setRot( targetRot, true )
+
+		endEffector:setPos( targetPos )
+		local targetRot = rotBetweenVecs( cpml.vec3(1,0,0), targetDir,
+			endEffector.constraint and endEffector.constraint.axis or nil )
+		endEffector:setRot( targetRot, true )
 
 		for j=#chain-1,1,-1 do
 			local curBone = chain[j]
@@ -50,10 +53,15 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 			local posAfterValidation = curChild:getPos()
 			local rotAfterValidation = curChild:getRot()
 			local undoMovement = posBeforeValidation - posAfterValidation
-			print(undoMovement)
-			curBone:setPos( curBone:getPos() + undoMovement )
 			local undoRotation = rotBeforeValidation * rotAfterValidation:inverse()
-			curBone:setRot( curBone:getRot()*undoRotation )
+			print(undoMovement)
+			print("rot before", rotBeforeValidation:to_angle_axis())
+			print("rot after", rotAfterValidation:to_angle_axis())
+			print(undoRotation:to_angle_axis())
+			if love.keyboard.isDown("4") then return end
+			--curBone:setRot( curBone:getRot()*undoRotation )
+			curBone:rotateAroundPoint( curChild:getPos(), undoRotation )
+			curBone:setPos( curBone:getPos() + undoMovement )
 			--curChild:setPos( posBeforeValidation )
 			--curChild:setRot( rotBeforeValidation )
 			
