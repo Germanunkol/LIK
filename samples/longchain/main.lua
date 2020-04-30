@@ -15,7 +15,7 @@ function createLongChain()
 
 	local segLen = 0.07
 	local b = Bone:new( skel, nil, vZero, cpml.quat(), segLen )
-	b:setConstraint( cpml.vec3(0,0,1), -math.pi*0.5, math.pi*0.5 )
+	b:setConstraint( cpml.vec3(0,0,1), -math.pi*0.75, math.pi*0.75 )
 	table.insert(spine, b)
 
 	for i=1,10 do
@@ -100,7 +100,10 @@ function drawSkel( skel, alpha )
 		if d.drawType == "line" then
 			love.graphics.line( d.points )
 		elseif d.drawType == "poly" then
-			love.graphics.polygon( "fill", d.points )
+			tris = love.math.triangulate( d.points )
+			for j,t in ipairs(tris) do
+				love.graphics.polygon( "fill", t )
+			end
 		end
 	end
 	love.graphics.pop()

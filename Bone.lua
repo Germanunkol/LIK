@@ -267,12 +267,11 @@ function Bone:getDebugData( drawConstraints )
 
 	-- Draw constraint, if any:
 	if drawConstraints and self.constraint then
-		local minRot = self.constraint.minRot
-		local maxRot = self.constraint.maxRot
+		local minAng = self.constraint.minAng
+		local maxAng = self.constraint.maxAng
 
 		-- My end pos in local coordinates...
 		local lEndPos = cpml.vec3( 0.5*self.len,0,0 )
-		-- ... rotated by the constraints:
 		local d = { col={0.9,0.2,0.2,0.4},
 			drawType="poly",
 			points = {pS.x, pS.y}
@@ -280,7 +279,8 @@ function Bone:getDebugData( drawConstraints )
 
 		if self.parent then
 			for i=0,10 do
-				local curRot = cpml.quat.slerp( minRot, maxRot, i/10 )
+				local ang = (maxAng-minAng)*(i/10) + minAng
+				local curRot = cpml.quat.from_angle_axis( ang, self.constraint.axis )
 				local lCurPos = cpml.quat.mul_vec3( curRot, lEndPos )
 				local curPos = self.parent:toGlobalPos( self.lPos + lCurPos )
 				table.insert( d.points, curPos.x )
@@ -289,7 +289,8 @@ function Bone:getDebugData( drawConstraints )
 			table.insert( data, d )
 		else
 			for i=0,10 do
-				local curRot = cpml.quat.slerp( minRot, maxRot, i/10 )
+				local ang = (maxAng-minAng)*(i/10) + minAng
+				local curRot = cpml.quat.from_angle_axis( ang, self.constraint.axis )
 				local lCurPos = cpml.quat.mul_vec3( curRot, lEndPos )
 				local curPos = self.lPos + lCurPos
 				table.insert( d.points, curPos.x )
