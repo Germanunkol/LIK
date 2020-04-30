@@ -15,7 +15,7 @@ function createLongChain()
 
 	local segLen = 0.07
 	local b = Bone:new( skel, nil, vZero, cpml.quat(), segLen )
-	b:setConstraint( cpml.vec3(0,0,1), 0,0 )
+	b:setConstraint( cpml.vec3(0,0,1), -math.pi*0.5, math.pi*0.5 )
 	table.insert(spine, b)
 
 	for i=1,10 do
@@ -62,7 +62,7 @@ function love.update( dt )
 	--floorPos = floorPos + cpml.vec3( 0, 0.1*math.cos(t*0.1), 0 )
 	skel.pos = cpml.vec3( baseX, 0, 0 )
 
-	Fabrik.solve( spine, targetPosLocal, targetDirLocal, 1 )
+	Fabrik.solve( spine, targetPosLocal, nil, 1 )
 	
 end
 
@@ -175,7 +175,7 @@ function love.keypressed( key, code, isrepeat )
 
 		skel.pos = cpml.vec3( baseX, 0, 0 )
 
-		Fabrik.solve( spine, targetPosLocal, targetDirLocal, 1 )
+		Fabrik.solve( spine, targetPosLocal, nil, 1 )
 		--Fabrik.solve( spine, targetPosLocal, nil, 20 )
 		prevTargetPos = targetPos
 		prevTargetDir = targetDir

@@ -27,9 +27,11 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 		print("Forward reaching pass")
 
 		chain[#chain]:setPos( targetPos )
-		local targetRot = rotBetweenVecs( cpml.vec3(1,0,0), targetDir,
-			chain[#chain].constraint and chain[#chain].constraint.axis or nil )
-		chain[#chain]:setRot( targetRot, true )
+		if targetDir then
+			local targetRot = rotBetweenVecs( cpml.vec3(1,0,0), targetDir,
+				chain[#chain].constraint and chain[#chain].constraint.axis or nil )
+			chain[#chain]:setRot( targetRot, true )
+		end
 
 		for j=#chain-1,1,-1 do
 			local curBone = chain[j]
@@ -112,9 +114,8 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 	--local errDir = cpml.vec3.dist( chain[#chain]:getPos(), targetPos ) 
 	if validify then
 		local eps = 1e-5
-		print(errPos)
+		print("Error:", errPos)
 		if errPos > eps then
-			print("Failed")
 			-- Restore poses:
 			for j=1,#chain do
 				chain[j]:setPos( cachePos[j] )
