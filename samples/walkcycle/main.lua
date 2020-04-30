@@ -22,11 +22,14 @@ function createShortChain()
 
 	spine = { b1_0, b1_1, b1_2, b1_3, b1_4 }
 
-	b1_0:setConstraint( cpml.vec3(0,0,1), -math.pi, -math.pi )
-	b1_1:setConstraint( cpml.vec3(0,0,1), -math.pi*0.9, math.pi*0.1 )
-	b1_2:setConstraint( cpml.vec3(0,0,1), -math.pi, -math.pi*0.1 )
-	b1_3:setConstraint( cpml.vec3(0,0,1), -math.pi*0.5, 0 )
-	b1_4:setConstraint( cpml.vec3(0,0,1), -math.pi*0.5, 0 )
+	b1_0:setConstraint( cpml.vec3(0,0,1), -math.pi, -math.pi*0.9 )
+	b1_1:setConstraint( cpml.vec3(0,0,1), -math.pi*0.8, -math.pi*0.2 )
+	b1_2:setConstraint( cpml.vec3(0,0,1), -math.pi*0.6, 0 )
+	b1_3:setConstraint( cpml.vec3(0,0,1), -math.pi*0.9, -math.pi*0.1 )
+	b1_4:setConstraint( cpml.vec3(0,0,1), -math.pi*0.5, math.pi*0.5 )
+	--b1_3:setConstraint( cpml.vec3(0,0,1), -math.pi*0.6, 0 )
+	--b1_3:setConstraint( cpml.vec3(0,0,1), -math.pi*0.2, math.pi*0.2 )
+	--b1_4:setConstraint( cpml.vec3(0,0,1), -math.pi*0.2, math.pi*0.2 )
 	return skel, spine
 end
 
@@ -45,8 +48,8 @@ function love.load()
 	speed = 0.5
 	baseX = 0
 	stepSize = 0.7
-	--footRaise = 0.1
-	footRaise = 0.55
+	footRaise = 0.1
+	--footRaise = 0.55
 end
 
 function love.update( dt )
@@ -118,20 +121,18 @@ function love.update( dt )
 	skel1.pos = cpml.vec3( baseX + 0.2, leftHeight, 0 )
 	targetPosLocal = skel1:toLocalPos( leftFootTargetPos )
 	targetDirLocal = skel1:toLocalDir( leftFootTargetDir )
+	targetDirLocal = nil
 
-	if not Fabrik.solve( spine1, targetPosLocal, targetDirLocal, 1 ) then
-		failed = true
-		return
-	end
+	-- Solve left foot:
+	Fabrik.solve( spine1, targetPosLocal, targetDirLocal, 1, false )
 
 	skel2.pos = cpml.vec3( baseX + 0.2, rightHeight, 0 )
 	targetPosLocal = skel2:toLocalPos( rightFootTargetPos )
 	targetDirLocal = skel2:toLocalDir( rightFootTargetDir )
+	targetDirLocal = nil
 
-	--[[if not Fabrik.solve( spine2, targetPosLocal, targetDirLocal, 1 ) then
-		failed = true
-		return
-	end]]
+	-- Solve right foot:
+	Fabrik.solve( spine2, targetPosLocal, targetDirLocal, 1, false )
 
 	--[[targetDir = cpml.vec3( 1,0,0 )
 	targetPos = getFootPlacement( t, ang+math.pi*0.5, 0 )
@@ -139,11 +140,11 @@ function love.update( dt )
 	targetDirLocal = skel2:toLocalDir( targetDir )
 	Fabrik.solve( spine2, targetPosLocal, targetDirLocal, 20 )]]
 
-	if Fabrik.validateChain( spine1 ) ~= true then
-		love.graphics.captureScreenshot( "debug.png" )
+	--if Fabrik.validateChain( spine1 ) ~= true then
+		--love.graphics.captureScreenshot( "debug.png" )
 		--failed = true
 		--love.event.quit()
-	end
+	--end
 	--Fabrik.solve( spine1, targetPos, targetDir, 3 )
 end
 
@@ -238,7 +239,7 @@ function love.draw()
 		love.graphics.line( x, y, x, y-height )
 	end]]
 
-	--drawSkel( skel2, 0.6 )
+	drawSkel( skel2, 0.6 )
 	drawSkel( skel1, 1 )
 	love.graphics.line( skel1.pos.x, skel1.pos.y, skel2.pos.x, skel2.pos.y )
 

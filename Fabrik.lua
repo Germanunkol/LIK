@@ -3,7 +3,7 @@ local cpml = require("lib.cpml")
 
 Fabrik = {}
 
-function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
+function Fabrik.solve( chain, targetPos, targetDir, maxIterations, validify )
 
 	-- Remember the original poses of all bones:
 	local cachePos = {}
