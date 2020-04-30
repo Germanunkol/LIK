@@ -113,7 +113,7 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, validify )
 	local errPos = cpml.vec3.dist( chain[#chain]:getPos(), targetPos ) 
 	--local errDir = cpml.vec3.dist( chain[#chain]:getPos(), targetPos ) 
 	if validify then
-		local eps = 1e-5
+		local eps = 1e-2
 		print("Error:", errPos)
 		if errPos > eps then
 			-- Restore poses:

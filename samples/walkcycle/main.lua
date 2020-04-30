@@ -14,19 +14,21 @@ function createShortChain()
 	local vZero = cpml.vec3(0,0,0)
 	local skel = Skeleton:new()
 
-	local b1_0 = Bone:new( skel, nil, vZero, cpml.quat(), 0.1 )
+	local b0 = Bone:new( skel, nil, vZero, cpml.quat(), 0 )
+	local b1_0 = Bone:new( skel, b0, vZero, cpml.quat(), 0.1 )
 	local b1_1 = Bone:new( skel, b1_0, cpml.vec3(0.1,0,0), cpml.quat(), 0.2 )
 	local b1_2 = Bone:new( skel, b1_1, cpml.vec3(0.2,0,0), cpml.quat(), 0.2 )
 	local b1_3 = Bone:new( skel, b1_2, cpml.vec3(0.2,0,0), cpml.quat(), 0.07 )
 	local b1_4 = Bone:new( skel, b1_3, cpml.vec3(0.07,0,0), cpml.quat(), 0.03 )
 
-	spine = { b1_0, b1_1, b1_2, b1_3, b1_4 }
+	spine = { b0, b1_0, b1_1, b1_2, b1_3, b1_4 }
 
-	b1_0:setConstraint( cpml.vec3(0,0,1), -math.pi, -math.pi*0.9 )
+	b0:setConstraint( cpml.vec3(0,0,1), math.pi, math.pi )
+	b1_0:setConstraint( cpml.vec3(0,0,1), -math.pi*0.3, math.pi*0.2 )
 	b1_1:setConstraint( cpml.vec3(0,0,1), -math.pi*0.8, -math.pi*0.2 )
 	b1_2:setConstraint( cpml.vec3(0,0,1), -math.pi*0.6, 0 )
 	b1_3:setConstraint( cpml.vec3(0,0,1), -math.pi*0.9, -math.pi*0.1 )
-	b1_4:setConstraint( cpml.vec3(0,0,1), -math.pi*0.5, math.pi*0.5 )
+	b1_4:setConstraint( cpml.vec3(0,0,1), -math.pi*0.75, math.pi*0.1 )
 	--b1_3:setConstraint( cpml.vec3(0,0,1), -math.pi*0.6, 0 )
 	--b1_3:setConstraint( cpml.vec3(0,0,1), -math.pi*0.2, math.pi*0.2 )
 	--b1_4:setConstraint( cpml.vec3(0,0,1), -math.pi*0.2, math.pi*0.2 )
@@ -50,6 +52,7 @@ function love.load()
 	stepSize = 0.7
 	footRaise = 0.1
 	--footRaise = 0.55
+	validify = true
 end
 
 function love.update( dt )
@@ -121,18 +124,16 @@ function love.update( dt )
 	skel1.pos = cpml.vec3( baseX + 0.2, leftHeight, 0 )
 	targetPosLocal = skel1:toLocalPos( leftFootTargetPos )
 	targetDirLocal = skel1:toLocalDir( leftFootTargetDir )
-	targetDirLocal = nil
 
 	-- Solve left foot:
-	Fabrik.solve( spine1, targetPosLocal, targetDirLocal, 1, false )
+	Fabrik.solve( spine1, targetPosLocal, targetDirLocal, 1, validify )
 
 	skel2.pos = cpml.vec3( baseX + 0.2, rightHeight, 0 )
 	targetPosLocal = skel2:toLocalPos( rightFootTargetPos )
 	targetDirLocal = skel2:toLocalDir( rightFootTargetDir )
-	targetDirLocal = nil
 
 	-- Solve right foot:
-	Fabrik.solve( spine2, targetPosLocal, targetDirLocal, 1, false )
+	Fabrik.solve( spine2, targetPosLocal, targetDirLocal, 1, validify )
 
 	--[[targetDir = cpml.vec3( 1,0,0 )
 	targetPos = getFootPlacement( t, ang+math.pi*0.5, 0 )
@@ -194,7 +195,7 @@ end
 function love.draw()
 	love.graphics.push()
 	love.graphics.translate( love.graphics.getWidth()*0.5, love.graphics.getHeight()*0.5 )
-	love.graphics.scale( 300 )
+	love.graphics.scale( 500 )
 
 	love.graphics.translate( -baseX, 0 )
 	drawGrid( baseX )
