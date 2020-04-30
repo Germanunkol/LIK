@@ -23,6 +23,11 @@ end
 function Bone:setLocalPos( p )
 	self.lPos = p
 end
+function Bone:setLocalPosFixedChild( p, child )
+	local origChildPos = child:getPos()
+	self.lPos = p
+	child:setPos( origChildPos )
+end
 function Bone:setLocalRot( r )
 	r = r:normalize()
 	self.lRot = r
@@ -30,7 +35,7 @@ end
 
 function Bone:setPos( p )
 	if self.parent then
-		lp = self.parent:toLocalPos( p )
+		local lp = self.parent:toLocalPos( p )
 		self:setLocalPos( lp )
 	else
 		self:setLocalPos( p )
@@ -39,22 +44,22 @@ end
 
 -- Move a bone while keeping its child fixed (all other children are moved)
 function Bone:setPosFixedChild( p, child )
-	origChildPos = child:getPos()
+	local origChildPos = child:getPos()
 	self:setPos( p )
 	child:setPos( origChildPos )
 end
 
 function Bone:setRotFixedChild( r, child, ignoreConstraint )
-	origChildPos = child:getPos()
-	origChildRot = child:getRot()
+	local origChildPos = child:getPos()
+	local origChildRot = child:getRot()
 	self:setRot( r, ignoreConstraint )
 	child:setPos( origChildPos )
 	child:setRot( origChildRot, true )
 end
 
 function Bone:setLocalRotFixedChild( r, child )
-	origChildPos = child:getPos()
-	origChildRot = child:getRot()
+	local origChildPos = child:getPos()
+	local origChildRot = child:getRot()
 	self:setLocalRot( r )
 	child:setPos( origChildPos )
 	child:setRot( origChildRot, true )
@@ -178,30 +183,33 @@ function Bone:correctPos( fixedChild )
 			-- Then, find out the angle between the vec connecting the bones and the
 			-- parent's base vec:
 			local ang = angBetweenVecs( cpml.vec3(1,0,0),proj,self.parent.constraint.axis )
+			local newPos
+			local newParentRot
 			if ang < self.parent.constraint.minAng then
-				local newPos = self.parent.constraint.minDir * self.parent.len
+				newPos = self.parent.constraint.minDir * self.parent.len
 				-- Correct parent to look at me:
-				self.parent:setLocalRot( self.parent.constraint.minRot )
-				local newPosRot = self.parent.lRot:inverse() * newPos
-				self:setLocalPos( newPosRot )
+				newParentRot = self.parent.constraint.minRot
 				--return self.parent:toGlobalPos( newPosRot )
 			elseif ang > self.parent.constraint.maxAng then
-				local newPos = self.parent.constraint.maxDir * self.parent.len
+				newPos = self.parent.constraint.maxDir * self.parent.len
 				-- Correct parent to look at me:
-				self.parent:setLocalRot( self.parent.constraint.maxRot )
-				local newPosRot = self.parent.lRot:inverse() * newPos
-				self:setLocalPos( newPosRot )
-				--return self.parent:toGlobalPos( newPosRot )
+				newParentRot = self.parent.constraint.maxRot
 			else
 				-- Correct parent to look at me:
-				local newParentRot = cpml.quat.from_angle_axis( ang,
+				newParentRot = cpml.quat.from_angle_axis( ang,
 					self.parent.constraint.axis )
-				self.parent:setLocalRot( newParentRot )
 				-- Ensure the bone is the correct length from the parent:
-				local newPos = proj:normalize() * self.parent.len
-				local newPosRot = self.parent.lRot:inverse() * newPos
+				newPos = proj:normalize() * self.parent.len
+			end
+
+			-- Correct parent to look at me:
+			self.parent:setLocalRotFixedChild( newParentRot, self )
+			-- Rotate new position into parent space:
+			local newPosRot = self.parent.lRot:inverse() * newPos
+			if fixedChild then
+				self:setLocalPosFixedChild( newPosRot, fixedChild )
+			else
 				self:setLocalPos( newPosRot )
-				--return self.parent:toGlobalPos( newPosRot )
 			end
 		end
 	end

@@ -95,29 +95,32 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 			end
 			local newPos = curParentPos + diff*curBone.len
 
-				if curChild then
-					curBone:setPosFixedChild( newPos, curChild )
-				else
-					curBone:setPos( newPos )
-				end
+			if curChild then
+				curBone:setPosFixedChild( newPos, curChild )
+				curBone:correctRot( curChild )
+				curBone:correctPos( curChild )
+			else
+				curBone:setPos( newPos )
+				curBone:correctRot()
+				curBone:correctPos()
+			end
 
-				if not love.keyboard.isDown("8") then
-					curBone:correctRot()
-					curBone:correctPos()
-				end
 		end
 	end
 
 	local errPos = cpml.vec3.dist( chain[#chain]:getPos(), targetPos ) 
 	--local errDir = cpml.vec3.dist( chain[#chain]:getPos(), targetPos ) 
-	local eps = 0.05
-	print(errPos)
-	if errPos > eps then
-		print("Failed")
-		-- Restore poses:
-		for j=1,#chain do
-			chain[j]:setPos( cachePos[j] )
-			chain[j]:setRot( cacheRot[j] )
+	if validify then
+		local eps = 1e-5
+		print(errPos)
+		if errPos > eps then
+			print("Failed")
+			-- Restore poses:
+			for j=1,#chain do
+				chain[j]:setPos( cachePos[j] )
+				chain[j]:setRot( cacheRot[j] )
+			end
+			return false
 		end
 	end
 	return true
