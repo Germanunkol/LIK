@@ -13,15 +13,15 @@ function createLongChain()
 	local skel = Skeleton:new()
 	spine = {}
 
-	local segLen = 0.05
+	local segLen = 0.07
 	local b = Bone:new( skel, nil, vZero, cpml.quat(), segLen )
-	b:setConstraint( cpml.vec3(0,0,1), -math.pi, math.pi )
+	b:setConstraint( cpml.vec3(0,0,1), 0,0 )
 	table.insert(spine, b)
 
 	for i=1,10 do
 		b = Bone:new( skel, b, cpml.vec3(segLen,0,0), cpml.quat(), segLen )
 		--if i < 10 then
-			b:setConstraint( cpml.vec3(0,0,1), -math.pi*0.9, math.pi*0.9 )
+			b:setConstraint( cpml.vec3(0,0,1), -math.pi*0.3, math.pi*0.3 )
 		--end
 		table.insert(spine, b)
 	end
@@ -62,7 +62,7 @@ function love.update( dt )
 	--floorPos = floorPos + cpml.vec3( 0, 0.1*math.cos(t*0.1), 0 )
 	skel.pos = cpml.vec3( baseX, 0, 0 )
 
-	Fabrik.solve( spine, targetPosLocal, targetDirLocal, 10 )
+	Fabrik.solve( spine, targetPosLocal, targetDirLocal, 1 )
 	
 end
 

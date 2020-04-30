@@ -163,7 +163,7 @@ function Bone:correctRot( fixedChild )
 	end
 end
 
-function Bone:correctPos()
+function Bone:correctPos( fixedChild )
 	-- If I don't have a parent, any position is valid.
 	if self.parent then
 		if self.parent.constraint then

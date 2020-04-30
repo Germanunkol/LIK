@@ -5,8 +5,15 @@ Fabrik = {}
 
 function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 
+	-- Remember the original poses of all bones:
+	local cachePos = {}
+	local cacheRot = {}
+	for j=1,#chain do
+		cachePos[j] = chain[j]:getPos()
+		cacheRot[j] = chain[j]:getRot()
+	end
+
 	local rootPos = chain[1]:getPos()
-	local endEffector = chain[#chain]
 
 	local lenCache = {}
 	for j,b in ipairs(chain) do
@@ -63,6 +70,7 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 
 		end
 
+		if love.keyboard.isDown("5") then return end
 
 		--------------------------------------------
 		-- Backward reaching pass:
@@ -72,6 +80,7 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 		chain[1]:setPosFixedChild( rootPos, chain[2] )
 		-- Ensure root bone is within valid bounds:
 		chain[1]:correctRot( chain[2] )
+		if love.keyboard.isDown("6") then return end
 
 		for j=2,#chain do
 			local curBone = chain[j]
@@ -85,16 +94,30 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, debugSteps )
 				diff = cpml.vec3(1,0,0)
 			end
 			local newPos = curParentPos + diff*curBone.len
-		
-			if curChild then
-				curBone:setPosFixedChild( newPos, curChild )
-			else
-				curBone:setPos( newPos )
-			end
 
-			curBone:correctRot()
-			curBone:correctPos()
+				if curChild then
+					curBone:setPosFixedChild( newPos, curChild )
+				else
+					curBone:setPos( newPos )
+				end
 
+				if not love.keyboard.isDown("8") then
+					curBone:correctRot()
+					curBone:correctPos()
+				end
+		end
+	end
+
+	local errPos = cpml.vec3.dist( chain[#chain]:getPos(), targetPos ) 
+	--local errDir = cpml.vec3.dist( chain[#chain]:getPos(), targetPos ) 
+	local eps = 0.05
+	print(errPos)
+	if errPos > eps then
+		print("Failed")
+		-- Restore poses:
+		for j=1,#chain do
+			chain[j]:setPos( cachePos[j] )
+			chain[j]:setRot( cacheRot[j] )
 		end
 	end
 	return true
