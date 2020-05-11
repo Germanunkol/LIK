@@ -3,7 +3,7 @@ local cpml = require("lib.cpml")
 
 Fabrik = {}
 
-function Fabrik.solve( chain, targetPos, targetDir, maxIterations, validify )
+function Fabrik.solve( chain, targetPos, targetDir, maxIterations, validify, verbose )
 
 	-- Remember the original poses of all bones:
 	local cachePos = {}
@@ -24,7 +24,7 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, validify )
 
 		--------------------------------------------
 		-- Forward reaching pass:
-		print("Forward reaching pass")
+		--print("Forward reaching pass")
 
 		chain[#chain]:setPos( targetPos )
 		if targetDir then
@@ -76,7 +76,7 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, validify )
 
 		--------------------------------------------
 		-- Backward reaching pass:
-		print("Backward reaching pass")
+		--print("Backward reaching pass")
 		
 		-- Move root bone back to original position:
 		chain[1]:setPosFixedChild( rootPos, chain[2] )
@@ -108,14 +108,21 @@ function Fabrik.solve( chain, targetPos, targetDir, maxIterations, validify )
 			end
 
 		end
+		if verbose then
+			local errPos = cpml.vec3.dist( chain[#chain]:getPos(), targetPos ) 
+			print("iteration:", i, "error:", errPos )
+		end
 	end
 
-	local errPos = cpml.vec3.dist( chain[#chain]:getPos(), targetPos ) 
 	--local errDir = cpml.vec3.dist( chain[#chain]:getPos(), targetPos ) 
 	if validify then
 		local eps = 1e-2
-		print("Error:", errPos)
+		local errPos = cpml.vec3.dist( chain[#chain]:getPos(), targetPos ) 
 		if errPos > eps then
+			if verbose then
+				print("Error (" .. errPos .. ") is greater than allowed threshold " ..
+					eps .. ")")
+			end
 			-- Restore poses:
 			for j=1,#chain do
 				chain[j]:setPos( cachePos[j] )
