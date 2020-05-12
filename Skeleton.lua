@@ -7,13 +7,53 @@ function Skeleton:initialize( pos, rot )
 	self.pos = pos or cpml.vec3()
 	self.rot = rot or cpml.quat()
 	self.bones = {}
+	self.roots = {}
 end
 
 function Skeleton:addBone( b )
-	if self.bones[b] == nil then
-		self.bones[b] = true
+	table.insert( self.bones, b )
+	if not b.parent then
+		table.insert( self.roots, b )
 	end
 end
+
+function Skeleton:finalize()
+	for i,r in ipairs( self.roots ) do
+		self:calcBindPose( r )
+	end
+end
+
+function Skeleton:calcBindPose( bone )
+	local bindPose = cpml.mat4()
+	if bone.parent then
+		cpml.mat4.translate( bindPose, bindPose, cpml.vec3(bone.parent.length,0,0) )
+	end
+	local rot = cpml.mat4.from_quaternion( bone.lRot )
+	cpml.mat4.mul( bindPose, bindPose, rot )
+	if bone.parent then
+		cpml.mat4.mul( bindPose, bindPose, bone.parent.bindPose )
+	end
+	bone.bindPose = bindPose
+	bone.invBindPose = cpml.mat4()
+	cpml.mat4.invert( bone.invBindPose, bindPose )
+
+	for i,c in ipairs( bone.children ) do
+		self:calcBindPose( c )
+	end
+end
+
+function Skeleton:bindVertices( verts )
+	for i, v in pairs( verts ) do
+		local bone = self.bones[v.boneIDs[1]]
+		if not bone.bindPose then
+			error("You must call Skeleton:finalize() before calling bindVertices!" )
+		end
+		pos = {v.lPos.x, v.lPos.y, v.lPos.z, 1 }
+		cpml.mat4.mul_vec4( pos, bone.bindPose, pos )
+		v.pos = cpml.vec3(pos[1],pos[2],pos[3])
+	end
+end
+
 
 function Skeleton:toLocalPos( pos )
 	local p = self.pos
@@ -52,7 +92,7 @@ function Skeleton:getDebugData( drawConstraints )
 			end
 		end
 	end
-	for b,t in pairs(self.bones) do
+	for i,b in ipairs(self.bones) do
 		local boneData = b:getDebugData( drawConstraints )
 		for key, elem in pairs(boneData) do
 			table.insert( data, elem )
@@ -69,6 +109,8 @@ function Skeleton:setDebugChain( chain )
 		table.insert( self.debugChain, bNew )
 	end
 end
+
+
 
 function test()
 	print("Testing Skeleton functions")

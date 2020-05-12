@@ -15,9 +15,17 @@ function Bone:initialize( skeleton, parent, lPos, lRot, length )
 	self.lPos = lPos or cpml.vec3()
 	self.lRot = lRot or cpml.quat()
 	self.len = length or 0
+	self.children = {}
+	if self.parent then
+		self.parent:addChild( self )
+	end
 	if self.skeleton then
 		self.skeleton:addBone( self )
 	end
+end
+
+function Bone:addChild( child )
+	table.insert( self.children, child )
 end
 
 function Bone:setLocalPos( p )
@@ -135,6 +143,12 @@ function Bone:getDir()
 	local rot = self:getRot()
 	return cpml.quat.mul_vec3( rot, cpml.vec3(1,0,0) )
 end
+
+function Bone:getLocalMat()
+	self.lMat = cpml.mat4.from_transform( self.lPos, self.lRot, nil )
+	return self.lMat
+end
+
 function Bone:clone()
 	local bNew = Bone:new( nil, self.parent, self.lPos, self.lRot, self.len )
 	if self.constraint then
