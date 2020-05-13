@@ -148,6 +148,13 @@ function Bone:getLocalMat()
 	self.lMat = cpml.mat4.from_transform( self.lPos, self.lRot, nil )
 	return self.lMat
 end
+function Bone:getMat()
+	self.mat = self:getLocalMat()
+	if self.parent then
+		cpml.mat4.mul( self.mat, self.mat, self.parent:getMat() )
+	end
+	return self.mat
+end
 
 function Bone:clone()
 	local bNew = Bone:new( nil, self.parent, self.lPos, self.lRot, self.len )

@@ -16,13 +16,13 @@ function Arm:initialize()
 
 	local b1_0 = Bone:new( self.skel, nil, vZero, noRot, 1 )
 	local b1_1 = Bone:new( self.skel, b1_0, cpml.vec3(1,0,0), noRot, 2 )
-	local b1_2 = Bone:new( self.skel, b1_1, cpml.vec3(2,0,0), noRot, 2 )
+	local b1_2 = Bone:new( self.skel, b1_1, cpml.vec3(2,0,0), noRot, 4 )
 
 	b1_0:setConstraint( cpml.vec3(0,0,1), math.pi*0.5, math.pi*0.5 )
 	b1_1:setConstraint( cpml.vec3(0,0,1), -math.pi*0.5, math.pi*0.5 )
 	b1_2:setConstraint( cpml.vec3(0,0,1), -math.pi*0.25, math.pi*0.25 )
 
-	self.skel:finalize()
+	--self.skel:finalize()
 
 	self:createMesh()
 
@@ -73,7 +73,7 @@ function Arm:createMesh()
 		table.insert( vMap, v5.ID) table.insert( vMap, v2.ID ) table.insert( vMap, v6.ID )
 	end
 
-	self.skel:bindVertices( vList )
+	--self.skel:bindVertices( vList )
 
 	local vListFinal = {}
 	for i,v in ipairs(vList) do
@@ -89,7 +89,7 @@ function Arm:draw( projMat, viewMat )
 	local bones = {}
 	for i,b in ipairs(self.skel.bones) do
 		local bone = {}
-		local mat = b:getLocalMat()
+		local mat = b:getMat()
 		for x=1,4 do
 			for y=1,4 do
 				table.insert( bone, mat[(y-1)*4+x] )
@@ -100,9 +100,19 @@ function Arm:draw( projMat, viewMat )
 	self.shader:send("bones", unpack(bones))
 	self.shader:send("projMat", projMat)
 	self.shader:send("viewMat", viewMat)
+	--love.graphics.setDepthMode( "lequal", true )
 	love.graphics.setShader( self.shader )
 	love.graphics.setColor( 1,1,1 )
 	love.graphics.draw( self.mesh )
+end
+
+function Arm:update( dt )
+	local t = love.timer.getTime()
+
+	local r = cpml.quat.from_angle_axis( math.cos(t), cpml.vec3(0,1,0) )
+	self.skel.bones[1]:setLocalRot( r )
+	self.skel.bones[2]:setLocalRot( r )
+	self.skel.bones[3]:setLocalRot( r )
 end
 
 return Arm

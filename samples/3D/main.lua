@@ -43,15 +43,20 @@ end
 
 function love.update( dt )
 	t = love.timer.getTime()
+
+	arm:update( dt )
 	--camera:setRot( cpml.quat.from_angle_axis( math.cos(t)*math.pi, cpml.vec3(1,0,0) ) )
 	--Fabrik.solve( spine, targetPosLocal, targetDirLocal, 1 )
 end
 
 function love.draw()
+	c,w = love.graphics.getDepthMode()
+	print(c,w)
 	projMat = camera:getProjectionMatrix()
 	viewMat = camera:getViewMatrix()
 
 	love.graphics.push()
+	love.graphics.setBlendMode( "alpha" )
 	--love.graphics.scale( const.meters2Pixels )
 
 	grid:draw( projMat, viewMat )

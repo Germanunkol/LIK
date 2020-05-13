@@ -16,18 +16,15 @@ function Vertex:initialize( pos, ID, boneID )
 	if boneID then
 		self.boneIDs = {boneID,-1,-1,-1}
 		self.boneWeights = {1,0,0,0}
-		self.pos = nil
-	else
-		self.pos = pos
 	end
 end
 
 function Vertex:toTable()
-	if self.pos == nil then
+	--[[if self.pos == nil then
 		error("You must call Skeleton:bindVertices() before calling the toTable() method!")
-	end
+	end]]
 	if self.boneIDs then
-		return { self.pos.x, self.pos.y, self.pos.z,
+		return { self.lPos.x, self.lPos.y, self.lPos.z,
 			self.texCoord.x, self.texCoord.y,
 			self.col.x, self.col.y, self.col.z,
 			--self.boneIDs[1]/7, self.boneIDs[2]/7, self.pos.z/10,
@@ -37,7 +34,7 @@ function Vertex:toTable()
 			self.boneWeights[1], self.boneWeights[2], self.boneWeights[3], self.boneWeights[4]
 		}
 	else
-		return { self.pos.x, self.pos.y, self.pos.z,
+		return { self.lPos.x, self.lPos.y, self.lPos.z,
 			self.texCoord.x, self.texCoord.y,
 			self.col.x, self.col.y, self.col.z
 		}

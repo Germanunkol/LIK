@@ -17,41 +17,45 @@ function Skeleton:addBone( b )
 	end
 end
 
-function Skeleton:finalize()
+--[[function Skeleton:finalize()
 	for i,r in ipairs( self.roots ) do
 		self:calcBindPose( r )
 	end
-end
+end]]
 
-function Skeleton:calcBindPose( bone )
+--[[function Skeleton:calcBindPose( bone )
 	local bindPose = cpml.mat4()
 	cpml.mat4.translate( bindPose, bindPose, bone.lPos )
-	print(bone, bone.lPos)
 	local rot = cpml.mat4.from_quaternion( bone.lRot )
 	cpml.mat4.mul( bindPose, bindPose, rot )
 	if bone.parent then
 		cpml.mat4.mul( bindPose, bindPose, bone.parent.bindPose )
 	end
 	bone.bindPose = bindPose
+	print("bindPose", bindPose)
 	bone.invBindPose = cpml.mat4()
 	cpml.mat4.invert( bone.invBindPose, bindPose )
 
 	for i,c in ipairs( bone.children ) do
 		self:calcBindPose( c )
 	end
-end
+end]]
 
-function Skeleton:bindVertices( verts )
+--[[function Skeleton:bindVertices( verts )
 	for i, v in pairs( verts ) do
-		local bone = self.bones[v.boneIDs[1]]
+		local bone = self.bones[ v.boneIDs[1] ]
 		if not bone.bindPose then
 			error("You must call Skeleton:finalize() before calling bindVertices!" )
 		end
 		pos = {v.lPos.x, v.lPos.y, v.lPos.z, 1 }
+		if v.boneIDs[1] == 2 then
+			print(bone.bindPose)
+			print(v.lPos)
+		end
 		cpml.mat4.mul_vec4( pos, bone.bindPose, pos )
 		v.pos = cpml.vec3(pos[1],pos[2],pos[3])
 	end
-end
+end]]
 
 
 function Skeleton:toLocalPos( pos )
