@@ -149,4 +149,15 @@ function test()
 end
 test()
 
+function printTable( t, depth )
+	depth = depth or 0
+	for i,v in pairs( t ) do
+		if type(v) == "table" then
+			print(string.rep(" ", depth),i)
+			printTable( v, depth+1 )
+		else
+			print(string.rep(" ", depth),i,v)
+		end
+	end
+end
 
