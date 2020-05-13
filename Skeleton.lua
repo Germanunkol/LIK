@@ -25,9 +25,8 @@ end
 
 function Skeleton:calcBindPose( bone )
 	local bindPose = cpml.mat4()
-	if bone.parent then
-		cpml.mat4.translate( bindPose, bindPose, cpml.vec3(bone.parent.length,0,0) )
-	end
+	cpml.mat4.translate( bindPose, bindPose, bone.lPos )
+	print(bone, bone.lPos)
 	local rot = cpml.mat4.from_quaternion( bone.lRot )
 	cpml.mat4.mul( bindPose, bindPose, rot )
 	if bone.parent then
